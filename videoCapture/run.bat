@@ -1,1 +1,2 @@
-python3.exe videoCapture.py
+python3.exe videoCapture.py 3 10
+pause
