@@ -1,6 +1,16 @@
 # import the opencv library
 import cv2
 
+def GetArgs_GetCaptureInterval(argv):
+    if len(argv) > 1: return int(argv[1])
+    return -1
+def GetArgs_NumberImagesCaptured(argv):
+    if len(argv) > 2: return int(argv[2])
+    print('No arg2 input!!! This code only capture 10 figures')
+    return 10
+
+def ShowTimer(t,mesg):
+    print('time : %s --- %s' % (time.strftime("%H:%M:%S", time.localtime(t)),mesg))
 class FormattedIdx:
     def __init__(self):
         self.idx = 0
@@ -10,12 +20,9 @@ class FormattedIdx:
         self.idx += 1
 
 class StatusCollecter:
-    # stat =  0 : normal
-    # stat = -1 : wrong input got
-    # stat = -2 : outside error
-    _CODE_GOOOOOOOOOOOD =  0
-    _CODE_INVALID_INPUT = -1
-    _CODE_ERR_DELIEVERY = -2
+    _CODE_GOOOOOOOOOOOD =  0 #  normal
+    _CODE_INVALID_INPUT = -1 #  wrong input got
+    _CODE_ERR_DELIEVERY = -2 #  outside error
 
     def __init__(self, raisingERROR: str = "" ):
         self.wronginterval = 0
@@ -45,56 +52,34 @@ class StatusCollecter:
         if self.stat == StatusCollecter._CODE_ERR_DELIEVERY: return self.errorMesg
         if self.stat == StatusCollecter._CODE_INVALID_INPUT: return "Wrong input"
         if self.stat == StatusCollecter._CODE_GOOOOOOOOOOOD: return "Capturing: img_%s.jpg" % idx_
-        return ""
-        
+        return "no stat shown"
 
-def AddHelperMesgTo(frame, runstat: StatusCollecter, imgidx: FormattedIdx) -> None:
-    # put text into video
-    usageHelp = '''---- Usage ----
-    * Capture: "space bar"
-    * Quit: "esc"
-    Status %s'''%runstat.ShowStatus(imgidx)
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    fontsize = 0.6
-    lineheight = 25
-    for idxLine,line in enumerate(usageHelp.split('\n'),1):
-        cv2.putText(frame,
-        line, (0,0+idxLine*lineheight),
-        font,fontsize,(204,153,255),2,cv2.LINE_4)
-
-if __name__ == "__main__":
-    
-    import os
-    tmpdir = 'tmpdir'
-    recordPathChecking = '' if not os.path.exists(tmpdir) else 'Error! tmp folder "%s" exists!! Delete it first'%tmpdir
-    if recordPathChecking == '': os.mkdir(tmpdir)
-    
-    # define a video capture object
-    vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    
-    import time
+def ManualCapture(vid, runstat):
     imgidx = FormattedIdx()
-    runstat = StatusCollecter(recordPathChecking)
     while(True):
-        
+
         # Capture the video frame
         # by frame
         ret, frame = vid.read()
-    
-        AddHelperMesgTo(frame,runstat, imgidx)
-    
-    
+
+        usageHelp = '''---- Usage ----\n'''
+        usageHelp+= '''    * Capture: "space bar"\n'''
+        usageHelp+= '''    * Quit: "esc"\n'''
+        usageHelp+= '''    Status %s'''%runstat.ShowStatus(imgidx)
+
+        AddHelperMesgTo_(frame,usageHelp)
+
+
         # Display the resulting frame
         try:
             cv2.imshow('frame', frame)
         except: # AssertionError as msg:
-            #print('""""error found """" : %s' % msg)
+            print('""""error found """" : %s\n\n' % msg)
             print('the reason might be no camera found')
-            os.system('pause')
             exit(1)
-            
-        
+
+
         # 'space' : capture
         # 'esc' : quit program
         # the 'esc' button is set as the
@@ -112,10 +97,104 @@ if __name__ == "__main__":
         elif waitkey == -1: # nothing
             time.sleep(0.1)
             runstat.CheckStatus()
-            
+
         else: # other key input. Will show wrong input
             runstat.SetWarning()
-    
+def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
+    imgidx = FormattedIdx()
+    ### 0  : init stat
+    ### >0 : capturing
+    ### <0 : paused
+    started=0
+    captured=False
+
+    while(maxNum_):
+        # Capture the video frame
+        # by frame
+        ret, frame = vid.read()
+
+        usageHelp = '''---- Automatically Capturing ----\n'''
+        if started == 0 and not captured:
+            usageHelp+= '''    Press "space" to start capturing \n'''
+        if started < 0:
+            usageHelp+= '''    Press "space" to continue capturing \n'''
+        if started > 0:
+            usageHelp+= '''    Status %s'''%runstat.ShowStatus(imgidx)
+        AddHelperMesgTo_(frame,usageHelp)
+
+        # Display the resulting frame
+        try:
+            cv2.imshow('frame', frame)
+        except: # AssertionError as msg:
+            print('""""error found """" : %s\n\n' % msg)
+            print('the reason might be no camera found')
+            exit(1)
+
+
+        waitkey = cv2.waitKey(1)
+        # 'space' : capture start
+        if waitkey == 32: # space key
+            if started == 0:
+                started=1
+                starttimer=time.time()
+                ShowTimer(starttimer,"start capturing")
+            else:
+                started *= -1
+                # reset timer to capture after pause
+                captured=False
+                starttimer=time.time()
+
+        if started > 0:
+            if not captured and int(time.time()-starttimer) % captureDURATION ==0:
+                ShowTimer(time.time(), "capturing picture")
+                # take picture
+                print('new file created: img_%s.png'%imgidx)
+                cv2.imwrite('%s/img_%s.jpg'%(tmpdir,imgidx), frame)
+                imgidx.PlusOne()
+                runstat.Succeed()
+                if imgidx.idx > maxNum_: return
+                captured=True
+
+            if captured:
+                if int(time.time()-starttimer) % captureDURATION !=0:
+                    captured=False
+                    ShowTimer(time.time(), "+1 sec : reset capture status")
+
+        time.sleep(0.1)
+
+
+def AddHelperMesgTo_(frame, usageHelp: str) -> None:
+    # put text into video
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    fontsize = 0.6
+    lineheight = 25
+    for idxLine,line in enumerate(usageHelp.split('\n'),1):
+        cv2.putText(frame,
+        line, (0,0+idxLine*lineheight),
+        font,fontsize,(204,153,255),2,cv2.LINE_4)
+
+
+if __name__ == "__main__":
+    import os
+    import sys
+    capInterval = GetArgs_GetCaptureInterval(sys.argv)
+    numImgCaptured = GetArgs_NumberImagesCaptured(sys.argv)
+
+    tmpdir = 'tmpdir'
+    recordPathChecking = '' if not os.path.exists(tmpdir) else 'Error! tmp folder "%s" exists!! Delete it first'%tmpdir
+    if recordPathChecking == '': os.mkdir(tmpdir)
+
+    # define a video capture object
+    vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+    import time
+    runstat = StatusCollecter(recordPathChecking)
+
+    if capInterval > 0:
+        AutomaticMode(vid, runstat, capInterval, numImgCaptured)
+    else:
+        ManualCapture(vid, runstat)
+
     # After the loop release the cap object
     vid.release()
     # Destroy all the windows
