@@ -41,7 +41,6 @@ def PrintHelp(idx):
     ===                                                            ===
     ==================================================================
     ''')
-    os.system('pause')
     exit(128)
 def checkInputDXF(ifile):
     try:
@@ -111,7 +110,5 @@ if __name__ == "__main__":
         write_entity(e, f, last_end)
     f.close()
     print('output file is output_dxfReader.txt')
-    os.system('pause')
-
 
 
