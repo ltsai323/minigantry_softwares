@@ -32,10 +32,12 @@ class MyPoint(object):
 def TranslatePointsFromLine(line):
   words=line.split()
   if len(words) < 2: return None
-  return MyPoint(words[-2],words[-1])  
+  return MyPoint(words[-2],words[-1])
 def TransformIntoMiniGantry(point):
   return MyPoint( -1.*point.y, point.x)
-  
+def InvTransformIntoMiniGantry(point):
+  return MyPoint( point.y, -1.*point.x )
+
 def SortingPoints(point_pool):
   MAXLEN_ACCEPTABLE=70
   BREAK_COUNTER=len(point_pool)*2
@@ -51,16 +53,16 @@ def SortingPoints(point_pool):
     pool.pop(seedIdx)
     # start the algorithm
     sorted=ShortedLength(p0,pool)
-  
+
     sorted.append(p0)
     maxlen=max( [ sorted[i].Length(sorted[i+1]) for i in range(len(sorted)-1)] )
 
     BREAK_COUNTER-=1
     if BREAK_COUNTER == 0: raise RuntimeError("No solution for this algorithm! Please extend allowed value of 'MAXLEN_ACCEPTABLE' in SortingPoints()")
     if maxlen > MAXLEN_ACCEPTABLE: continue
-    
+
     return sorted
-  
+
 # recursive function 
 def ShortedLength(currentPoint, PointPool):
   if len(PointPool)==0: return []
@@ -77,10 +79,11 @@ def ShortedLength(currentPoint, PointPool):
   resultlist.append(pointFound)
   return resultlist
 
-def DrawOutput(points, outputname):
+def DrawOutput(points_, outputname):
   from matplotlib import pyplot
   import numpy as np
-  
+  points = [ InvTransformIntoMiniGantry(p) for p in points_ ]
+
   xvals = np.array( [ point.x for point in points ] )
   yvals = np.array( [ point.y for point in points ] )
   #pyplot.scatter( xvals, yvals )
@@ -94,7 +97,7 @@ if __name__ == "__main__":
   import sys
   if len(sys.argv) != 2: raise IOError('input a text file!')
   print ( 'input file : %s' % sys.argv[1] )
-  
+
   lines = ( line.strip() for line in open(sys.argv[1], 'r').readlines() if 'CIRCLE' in line )
   points = ( TranslatePointsFromLine(line) for line in lines if (TranslatePointsFromLine(line) != None ))
   convertedPoints = [ TransformIntoMiniGantry(point) for point in points ]
@@ -111,7 +114,7 @@ if __name__ == "__main__":
       # print to screen
       #print('No.%2d: %s'%(idx,cPoint))
       #if idx%5==5-1: print('---- 5 sep ----')
-      
+
       # print to file
       ofile.write('No.%2d: %s\n'%(idx+1,cPoint))
       if idx%5==5-1: ofile.write('---- 5 sep ----\n')
