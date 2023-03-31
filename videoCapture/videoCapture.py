@@ -185,7 +185,8 @@ if __name__ == "__main__":
     if recordPathChecking == '': os.mkdir(tmpdir)
 
     # define a video capture object
-    vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    #vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    vid = cv2.VideoCapture('/dev/video0')
 
     import time
     runstat = StatusCollecter(recordPathChecking)
