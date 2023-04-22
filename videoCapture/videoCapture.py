@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
 # import the opencv library
 import cv2
+import datetime
 
 def GetArgs_GetCaptureInterval(argv):
     if len(argv) > 1: return int(argv[1])
@@ -91,7 +93,7 @@ def ManualCapture(vid, runstat):
         #elif runstat.
         elif waitkey == 32: # space key
             print('new file created: img_%s.png'%imgidx)
-            cv2.imwrite('%s/img_%s.jpg'%(tmpdir,imgidx), frame)
+            cv2.imwrite('%s/img_%s.jpg'%(outDir,imgidx), frame)
             imgidx.PlusOne()
             runstat.Succeed()
         elif waitkey == -1: # nothing
@@ -149,7 +151,7 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
                 ShowTimer(time.time(), "capturing picture")
                 # take picture
                 print('new file created: img_%s.png'%imgidx)
-                cv2.imwrite('%s/img_%s.jpg'%(tmpdir,imgidx), frame)
+                cv2.imwrite('%s/img_%s.jpg'%(outDir,imgidx), frame)
                 imgidx.PlusOne()
                 runstat.Succeed()
                 if imgidx.idx > maxNum_: return
@@ -180,9 +182,10 @@ if __name__ == "__main__":
     capInterval = GetArgs_GetCaptureInterval(sys.argv)
     numImgCaptured = GetArgs_NumberImagesCaptured(sys.argv)
 
-    tmpdir = 'tmpdir'
-    recordPathChecking = '' if not os.path.exists(tmpdir) else 'Error! tmp folder "%s" exists!! Delete it first'%tmpdir
-    if recordPathChecking == '': os.mkdir(tmpdir)
+    currentTime = datetime.datetime.now()
+    outDir = currentTime.strftime("AutoCapture_%Y-%m-%d_%H-%M")
+    recordPathChecking = '' if not os.path.exists(outDir) else 'Error! tmp folder "%s" exists!! Delete it first'%outDir
+    if recordPathChecking == '': os.mkdir(outDir)
 
     # define a video capture object
     #vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
