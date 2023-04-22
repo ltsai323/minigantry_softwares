@@ -128,8 +128,8 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
     started=0
     captured=False
 
-    usageHelperInit = AutoHelperMessage(['Press "space" to start capturing'])
-    usageHelperStop = AutoHelperMessage(['Press "space" to continue capturing','ESC to escape'])
+    usageHelperInit = AutoHelperMessage(['Press SPACE to start capturing'])
+    usageHelperStop = AutoHelperMessage(['Press SPACE to continue capturing','ESC to escape'])
     usageHelperNorm = AutoHelperMessage(['Status {thestatus}','ESC to escape'])
 
     while(maxNum_):
@@ -192,14 +192,19 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
 
         time.sleep(0.1)
 
-''' GPIO section '''
-#GPIO.setmode(GPIO.BCM) # Use BCM pin numbering
-GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
-pin=11 #physical pin number
-GPIO.setup(pin, GPIO.IN) # Set pin as input
-pin_value = GPIO.input(pin) # read GPIO value # asdf how to decide HIGH and LOW?
-''' GPIO section end '''
+# ''' GPIO section '''
+# #GPIO.setmode(GPIO.BCM) # Use BCM pin numbering
+# GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+# pin=11 #physical pin number
+# GPIO.setup(pin, GPIO.IN) # Set pin as input
+# pin_value = GPIO.input(pin) # read GPIO value # asdf how to decide HIGH and LOW?
+# ''' GPIO section end '''
 def GPIOMode(vid, runstat):
+    '''
+    GPIO High : capture photo
+    GPIO Low  : wait program
+    Continuous GPIO High : stop program
+    '''
     imgidx = FormattedIdx()
     ### 0  : init stat
     ### >0 : capturing
@@ -207,11 +212,18 @@ def GPIOMode(vid, runstat):
     started=0
     captured=False
 
-    usageHelperInit = AutoHelperMessage(['Press "space" to start capturing'])
-    usageHelperStop = AutoHelperMessage(['Press "space" to continue capturing'])
+    usageHelperInit = AutoHelperMessage(['Press START to start capturing'])
+    usageHelperStop = AutoHelperMessage(['Press START to continue capturing','ESC to escape'])
     usageHelperNorm = AutoHelperMessage(['Status {thestatus}','ESC to escape'])
 
-    while(maxNum_):
+    #GPIO.setmode(GPIO.BCM) # Use BCM pin numbering
+    GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+    RPiPin=11 #physical pin number
+    GPIO.setup(RPiPin, GPIO.IN) # Set pin as input
+
+    status2=0 # record previous 2 status
+    status1=0 # record previous 1 status
+    while True:
         # Capture the video frame
         # by frame
         ret, frame = vid.read()
@@ -235,38 +247,31 @@ def GPIOMode(vid, runstat):
             exit(1)
 
 
+        pin_value = GPIO.input(RPiPin) # read GPIO value # 0: low 1:high
+
+        currentTimer = time.time()
         waitkey = cv2.waitKey(1)
-        # 'space' : capture start
-        if waitkey == 32: # space key
-            if started == 0:
-                started=1
-                startTimer=time.time()
-                ShowTimer(startTimer,"start capturing")
-            else:
-                started *= -1
-                # reset timer to capture after pause
-                captured=False
-                startTimer=time.time()
         if   waitkey == 27: # esc key
+            # break program by keyboard
+            ShowTimer(currentTimer, "program exited by user")
+            break
+        if pin_value == 1 and status1 == 1 and status2 == 1:
+            # break program by external trigger
+            ShowTimer(currentTimer, "program done")
             break
 
-        if started > 0:
-            if not captured and int(time.time()-startTimer) % captureDURATION ==0:
-                ShowTimer(time.time(), "capturing picture")
-                # take picture
-                print('new file created: img_%s.png'%imgidx)
-                cv2.imwrite('%s/img_%s.jpg'%(outDir,imgidx), frame)
-                imgidx.PlusOne()
-                runstat.Succeed()
-                if imgidx.idx > maxNum_: return
-                captured=True
-
-            if captured:
-                if int(time.time()-startTimer) % captureDURATION !=0:
-                    captured=False
-                    ShowTimer(time.time(), "+1 sec : reset capture status")
+        if pin_value == 1 and status1 == 0:
+            # capture image
+            ShowTimer(currentTimer, "%s/Auto_GPIOCapture_%s.jpg captured"%(outDir,imgidx))
+            cv2.imwrite('%s/img_%s.jpg'%(outDir,imgidx), frame)
+            imgidx.PlusOne()
+            runstat.Succeed()
+        # status delivery for break program
+        status2 = status1
+        status1 = pin_value
 
         time.sleep(0.1)
+
 
 def AddHelperMesgTo_(frame, usageHelp: str) -> None:
     # put text into video
