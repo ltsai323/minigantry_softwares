@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # import the opencv library
 import cv2
-import datetime
+import time
+import RPi.GPIO as GPIO
+
+
 
 def GetArgs_GetCaptureInterval(argv):
     if len(argv) > 1: return int(argv[1])
@@ -126,7 +129,7 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
     captured=False
 
     usageHelperInit = AutoHelperMessage(['Press "space" to start capturing'])
-    usageHelperStop = AutoHelperMessage(['Press "space" to continue capturing'])
+    usageHelperStop = AutoHelperMessage(['Press "space" to continue capturing','ESC to escape'])
     usageHelperNorm = AutoHelperMessage(['Status {thestatus}','ESC to escape'])
 
     while(maxNum_):
@@ -142,13 +145,6 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
         if started > 0:
             usageHelp = usageHelperNorm.format(thestatus=runstat.ShowStatus(imgidx))
 
-        #usageHelp = '''---- Automatically Capturing ----\n'''
-        #if started == 0 and not captured:
-        #    usageHelp+= '''    Press "space" to start capturing \n'''
-        #if started < 0:
-        #    usageHelp+= '''    Press "space" to continue capturing \n'''
-        #if started > 0:
-        #    usageHelp+= '''    Status %s'''%runstat.ShowStatus(imgidx)
         AddHelperMesgTo_(frame,usageHelp)
 
         # Display the resulting frame
@@ -165,18 +161,97 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
         if waitkey == 32: # space key
             if started == 0:
                 started=1
-                starttimer=time.time()
-                ShowTimer(starttimer,"start capturing")
+                startTimer=time.time()
+                ShowTimer(startTimer,"start capturing")
             else:
                 started *= -1
                 # reset timer to capture after pause
                 captured=False
-                starttimer=time.time()
+                startTimer=time.time()
         if   waitkey == 27: # esc key
             break
 
         if started > 0:
-            if not captured and int(time.time()-starttimer) % captureDURATION ==0:
+            currentTimer = time.time()
+            if not captured: # capture image now
+            #if not captured and int(time.time()-startTimer) % captureDURATION ==0:
+                ShowTimer(currentTimer, "capturing picture")
+                # take picture
+                print('new file created: img_%s.png'%imgidx)
+                cv2.imwrite('%s/img_%s.jpg'%(outDir,imgidx), frame)
+                imgidx.PlusOne()
+                runstat.Succeed()
+                if imgidx.idx > maxNum_: return
+                captured=True
+
+            if captured:
+                if (currentTimer-startTimer) > captureDURATION:
+                    startTimer = currentTimer
+                    captured = False
+                    ShowTimer(currentTimer, "+%f sec : reset capture status"%captureDURATION)
+
+        time.sleep(0.1)
+
+''' GPIO section '''
+#GPIO.setmode(GPIO.BCM) # Use BCM pin numbering
+GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+pin=11 #physical pin number
+GPIO.setup(pin, GPIO.IN) # Set pin as input
+pin_value = GPIO.input(pin) # read GPIO value # asdf how to decide HIGH and LOW?
+''' GPIO section end '''
+def GPIOMode(vid, runstat):
+    imgidx = FormattedIdx()
+    ### 0  : init stat
+    ### >0 : capturing
+    ### <0 : paused
+    started=0
+    captured=False
+
+    usageHelperInit = AutoHelperMessage(['Press "space" to start capturing'])
+    usageHelperStop = AutoHelperMessage(['Press "space" to continue capturing'])
+    usageHelperNorm = AutoHelperMessage(['Status {thestatus}','ESC to escape'])
+
+    while(maxNum_):
+        # Capture the video frame
+        # by frame
+        ret, frame = vid.read()
+
+        usageHelp = ''
+        if started == 0 and not captured:
+            usageHelp = usageHelperInit
+        if started < 0:
+            usageHelp = usageHelperStop
+        if started > 0:
+            usageHelp = usageHelperNorm.format(thestatus=runstat.ShowStatus(imgidx))
+
+        AddHelperMesgTo_(frame,usageHelp)
+
+        # Display the resulting frame
+        try:
+            cv2.imshow('frame', frame)
+        except: # AssertionError as msg:
+            print('""""error found """" : %s\n\n' % msg)
+            print('the reason might be no camera found')
+            exit(1)
+
+
+        waitkey = cv2.waitKey(1)
+        # 'space' : capture start
+        if waitkey == 32: # space key
+            if started == 0:
+                started=1
+                startTimer=time.time()
+                ShowTimer(startTimer,"start capturing")
+            else:
+                started *= -1
+                # reset timer to capture after pause
+                captured=False
+                startTimer=time.time()
+        if   waitkey == 27: # esc key
+            break
+
+        if started > 0:
+            if not captured and int(time.time()-startTimer) % captureDURATION ==0:
                 ShowTimer(time.time(), "capturing picture")
                 # take picture
                 print('new file created: img_%s.png'%imgidx)
@@ -187,12 +262,11 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
                 captured=True
 
             if captured:
-                if int(time.time()-starttimer) % captureDURATION !=0:
+                if int(time.time()-startTimer) % captureDURATION !=0:
                     captured=False
                     ShowTimer(time.time(), "+1 sec : reset capture status")
 
         time.sleep(0.1)
-
 
 def AddHelperMesgTo_(frame, usageHelp: str) -> None:
     # put text into video
@@ -211,16 +285,15 @@ if __name__ == "__main__":
     capInterval = GetArgs_GetCaptureInterval(sys.argv)
     numImgCaptured = GetArgs_NumberImagesCaptured(sys.argv)
 
-    currentTime = datetime.datetime.now()
-    outDir = currentTime.strftime("AutoCapture_%Y-%m-%d_%H-%M")
-    recordPathChecking = '' if not os.path.exists(outDir) else 'Error! tmp folder "%s" exists!! Delete it first'%outDir
+    currentTime = time.time()
+    outDir = time.strftime("AutoCapture_%Y-%m-%d_%H:%M", time.localtime(currentTime))
+    recordPathChecking = '' if not os.path.exists(outDir) else 'Error! folder "%s" exists!! Delete it first'%outDir
     if recordPathChecking == '': os.mkdir(outDir)
 
     # define a video capture object
     #vid = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     vid = cv2.VideoCapture('/dev/video0')
 
-    import time
     runstat = StatusCollecter(recordPathChecking)
 
     if capInterval > 0:
