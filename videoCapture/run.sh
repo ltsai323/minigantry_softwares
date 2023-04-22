@@ -3,5 +3,5 @@
 python3 videoCapture.py GPIO
 
 echo output dir:
-ls -l | head -n1
+ls -lt | head -n1
 read -p "press enter to continue"

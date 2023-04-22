@@ -7,5 +7,5 @@ NUM_IMAGE=10
 python3 videoCapture.py Timer $DELAYTIME $NUM_IMAGE
 
 echo output dir:
-ls -l | head -n1
+ls -lt | head -n1
 read -p "press enter to continue"
