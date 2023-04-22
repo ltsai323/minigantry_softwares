@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-python3 videoCapture.py GPIO
+DELAYTIME=3
+NUM_IMAGE=10
+
+
+python3 videoCapture.py Timer $DELAYTIME $NUM_IMAGE
 
 echo output dir:
 ls -l | head -n1

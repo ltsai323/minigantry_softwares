@@ -4,13 +4,21 @@ import cv2
 import time
 import RPi.GPIO as GPIO
 
+'''
+arg1: input mode. [Mantual,Timer,GPIO]
+arg2: Capture interval for Timer mode (float)
+arg3: Numbers of capturing for Timer mode (int)
+'''
 
 
+def GetArgs_Mode(argv):
+    if len(argv) > 1: return argv[1]
+    raise IOError('input mode not found')
 def GetArgs_GetCaptureInterval(argv):
-    if len(argv) > 1: return int(argv[1])
-    return -1
+    if len(argv) > 1: return float(argv[2])
+    return -1.
 def GetArgs_NumberImagesCaptured(argv):
-    if len(argv) > 2: return int(argv[2])
+    if len(argv) > 2: return int(argv[3])
     print('No arg2 input!!! This code only capture 10 figures')
     return 10
 
@@ -287,6 +295,7 @@ def AddHelperMesgTo_(frame, usageHelp: str) -> None:
 if __name__ == "__main__":
     import os
     import sys
+    runmode = GetArgs_Mode(sys.argv)
     capInterval = GetArgs_GetCaptureInterval(sys.argv)
     numImgCaptured = GetArgs_NumberImagesCaptured(sys.argv)
 
@@ -301,10 +310,12 @@ if __name__ == "__main__":
 
     runstat = StatusCollecter(recordPathChecking)
 
-    if capInterval > 0:
-        AutomaticMode(vid, runstat, capInterval, numImgCaptured)
-    else:
+    if runmode == 'Manual':
         ManualCapture(vid, runstat)
+    if runmode == 'Timer':
+        AutomaticMode(vid, runstat, capInterval, numImgCaptured)
+    if runmode == 'GPIO':
+        GPIOMode(vid, runstat)
 
     # After the loop release the cap object
     vid.release()
