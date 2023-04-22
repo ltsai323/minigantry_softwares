@@ -102,6 +102,21 @@ def ManualCapture(vid, runstat):
 
         else: # other key input. Will show wrong input
             runstat.SetWarning()
+def AutoHelperMessage(mesgs):
+    ''' Generate message with format
+
+    ---- Autimatically Capturing ----
+        str1
+        str2
+        str3
+
+
+        Args: str list
+
+        Return: str
+    '''
+    out = '---- Autimatically Capturing ----\n'
+    return out + '    '.join(mesg+'\n' for mesg in mesgs)
 def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
     imgidx = FormattedIdx()
     ### 0  : init stat
@@ -110,18 +125,30 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
     started=0
     captured=False
 
+    usageHelperInit = AutoHelperMessage(['Press "space" to start capturing'])
+    usageHelperStop = AutoHelperMessage(['Press "space" to continue capturing'])
+    usageHelperNorm = AutoHelperMessage(['Status {thestatus}','ESC to escape'])
+
     while(maxNum_):
         # Capture the video frame
         # by frame
         ret, frame = vid.read()
 
-        usageHelp = '''---- Automatically Capturing ----\n'''
+        usageHelp = ''
         if started == 0 and not captured:
-            usageHelp+= '''    Press "space" to start capturing \n'''
+            usageHelp = usageHelperInit
         if started < 0:
-            usageHelp+= '''    Press "space" to continue capturing \n'''
+            usageHelp = usageHelperStop
         if started > 0:
-            usageHelp+= '''    Status %s'''%runstat.ShowStatus(imgidx)
+            usageHelp = usageHelperNorm.format(thestatus=runstat.ShowStatus(imgidx))
+
+        #usageHelp = '''---- Automatically Capturing ----\n'''
+        #if started == 0 and not captured:
+        #    usageHelp+= '''    Press "space" to start capturing \n'''
+        #if started < 0:
+        #    usageHelp+= '''    Press "space" to continue capturing \n'''
+        #if started > 0:
+        #    usageHelp+= '''    Status %s'''%runstat.ShowStatus(imgidx)
         AddHelperMesgTo_(frame,usageHelp)
 
         # Display the resulting frame
@@ -145,6 +172,8 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
                 # reset timer to capture after pause
                 captured=False
                 starttimer=time.time()
+        if   waitkey == 27: # esc key
+            break
 
         if started > 0:
             if not captured and int(time.time()-starttimer) % captureDURATION ==0:
