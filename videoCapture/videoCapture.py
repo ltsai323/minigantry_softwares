@@ -24,7 +24,7 @@ def GetArgs_NumberImagesCaptured(argv):
 
 def ShowTimer(t,mesg):
     print('time : %s --- %s' % (time.strftime("%H:%M:%S", time.localtime(t)),mesg))
-class FormattedIdx:
+class formatted_idx:
     def __init__(self):
         self.idx = 0
     def __str__(self):
@@ -61,7 +61,7 @@ class StatusCollecter:
         self.wronginterval -= 1
         if self.wronginterval < 0:
             self.stat = StatusCollecter._CODE_GOOOOOOOOOOOD # reset
-    def ShowStatus(self, idx_ : FormattedIdx) -> str:
+    def ShowStatus(self, idx_ : formatted_idx) -> str:
         if self.stat == StatusCollecter._CODE_ERR_DELIEVERY: return self.errorMesg
         if self.stat == StatusCollecter._CODE_INVALID_INPUT: return "Wrong input"
         if self.stat == StatusCollecter._CODE_GOOOOOOOOOOOD: return "Capturing: img_%s.jpg" % idx_
@@ -69,7 +69,7 @@ class StatusCollecter:
 
 
 def ManualCapture(vid, runstat):
-    imgidx = FormattedIdx()
+    imgidx = formatted_idx()
     while(True):
 
         # Capture the video frame
@@ -81,7 +81,7 @@ def ManualCapture(vid, runstat):
         usageHelp+= '''    * Quit: "esc"\n'''
         usageHelp+= '''    Status %s'''%runstat.ShowStatus(imgidx)
 
-        AddHelperMesgTo_(frame,usageHelp)
+        add_helper_mesg_to(frame,usageHelp)
 
 
         # Display the resulting frame
@@ -113,7 +113,7 @@ def ManualCapture(vid, runstat):
 
         else: # other key input. Will show wrong input
             runstat.SetWarning()
-def AutoHelperMessage(mesgs):
+def auto_helper_message(mesgs):
     ''' Generate message with format
 
     ---- Autimatically Capturing ----
@@ -129,16 +129,16 @@ def AutoHelperMessage(mesgs):
     out = '---- Autimatically Capturing ----\n'
     return out + '    '.join(mesg+'\n' for mesg in mesgs)
 def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
-    imgidx = FormattedIdx()
+    imgidx = formatted_idx()
     ### 0  : init stat
     ### >0 : capturing
     ### <0 : paused
     started=0
     captured=False
 
-    usageHelperInit = AutoHelperMessage(['Press SPACE to start capturing'])
-    usageHelperStop = AutoHelperMessage(['Press SPACE to continue capturing','ESC to escape'])
-    usageHelperNorm = AutoHelperMessage(['Status {thestatus}','ESC to escape'])
+    usageHelperInit = auto_helper_message(['Press SPACE to start capturing'])
+    usageHelperStop = auto_helper_message(['Press SPACE to continue capturing','ESC to escape'])
+    usageHelperNorm = auto_helper_message(['Status {thestatus}','ESC to escape'])
 
     while(maxNum_):
         # Capture the video frame
@@ -153,7 +153,7 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
         if started > 0:
             usageHelp = usageHelperNorm.format(thestatus=runstat.ShowStatus(imgidx))
 
-        AddHelperMesgTo_(frame,usageHelp)
+        add_helper_mesg_to(frame,usageHelp)
 
         # Display the resulting frame
         try:
@@ -198,7 +198,7 @@ def AutomaticMode(vid, runstat, captureDURATION=3, maxNum_=100):
                     captured = False
                     ShowTimer(currentTimer, "+%f sec : reset capture status"%captureDURATION)
 
-        time.sleep(0.1)
+        #time.sleep(0.1)
 
 # ''' GPIO section '''
 # #GPIO.setmode(GPIO.BCM) # Use BCM pin numbering
@@ -213,16 +213,16 @@ def GPIOMode(vid, runstat):
     GPIO Low  : wait program
     Continuous GPIO High : stop program
     '''
-    imgidx = FormattedIdx()
+    imgidx = formatted_idx()
     ### 0  : init stat
     ### >0 : capturing
     ### <0 : paused
     started=0
     captured=False
 
-    usageHelperInit = AutoHelperMessage(['Press START to start capturing'])
-    usageHelperStop = AutoHelperMessage(['Press START to continue capturing','ESC to escape'])
-    usageHelperNorm = AutoHelperMessage(['Status {thestatus}','ESC to escape'])
+    usageHelperInit = auto_helper_message(['Press START to start capturing'])
+    usageHelperStop = auto_helper_message(['Press START to continue capturing','ESC to escape'])
+    usageHelperNorm = auto_helper_message(['Status {thestatus}','ESC to escape'])
 
     #GPIO.setmode(GPIO.BCM) # Use BCM pin numbering
     GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
@@ -244,7 +244,7 @@ def GPIOMode(vid, runstat):
         if started > 0:
             usageHelp = usageHelperNorm.format(thestatus=runstat.ShowStatus(imgidx))
 
-        AddHelperMesgTo_(frame,usageHelp)
+        add_helper_mesg_to(frame,usageHelp)
 
         # Display the resulting frame
         try:
@@ -278,10 +278,10 @@ def GPIOMode(vid, runstat):
         status2 = status1
         status1 = pin_value
 
-        time.sleep(0.1)
+        #time.sleep(0.1)
 
 
-def AddHelperMesgTo_(frame, usageHelp: str) -> None:
+def add_helper_mesg_to(frame, usageHelp: str) -> None:
     # put text into video
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontsize = 0.6
