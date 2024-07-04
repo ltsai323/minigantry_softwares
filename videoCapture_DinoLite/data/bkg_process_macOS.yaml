@@ -1,0 +1,10 @@
+operation_system: macOS
+'Moving Delay': 0.1
+'Capturing Delay': 4.0
+
+SerialDeviceMgr:
+  device_wildcard: '/dev/tty.usb*'
+PhotoCapturingAPI:
+  app_name: 'TextEdit'
+  init_delay: 2.0
+  work_delay: 2.0
