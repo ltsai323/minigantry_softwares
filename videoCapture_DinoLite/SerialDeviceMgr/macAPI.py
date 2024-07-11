@@ -17,10 +17,11 @@ def SetLog(primaryLOG, secondaryLOG):
 
 class InputConf:
     def __init__(self,
-                 device_wildcard:str = '',
+                 #device_wildcard:str = '',
                  **xargs
                  ):
-        self.listed_dev = frag.GetPicoDevice(device_wildcard)
+        #self.listed_dev = frag.GetPicoDevice(device_wildcard)
+        self.listed_dev = frag.list_available_port()
 
 class API:
     def __init__(self,inputCONF:InputConf):

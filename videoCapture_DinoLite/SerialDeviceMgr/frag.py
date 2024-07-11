@@ -80,7 +80,7 @@ class MachineStatus:
                 - If further received read ON, set write to OFF.
             * if write is OFF and read is ON: Job is still working
         '''
-        
+
         if self.job_status == 0:
             PrimaryLog('Job Stopped')
             SecondaryLog('serial device disconnected')
@@ -116,18 +116,19 @@ class MachineStatus:
             time.sleep(monitoringPERIOD)
             communicating = self.communicate_once()
 
-        
+
     @property
     def GetStatus(self):
         return int(self.stat_read)
     def SetValue(self):
         self.stat_write = STAT_ON
 
+''' Replaced by list_available_port
 def GetPicoDevice(deviceWILDCARD:str) -> str:
     # '/dev/tty.usb*'
     import glob
     return glob.glob(deviceWILDCARD)
-
+ '''
 
 
 
