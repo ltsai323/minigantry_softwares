@@ -1,1 +1,3 @@
-python3 run.py  20
+#!/usr/bin/env sh
+source env_setup.sh
+python3 main.py
