@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import bkg_process as bkg_job
-#import GUIMgr
-import bb as GUIMgr
+import GUIMgr
 import tkinter as tk
 #import photo_capture_windows as photo_capture
 
@@ -14,7 +13,8 @@ if __name__ == "__main__":
     #number_of_loops = int(sys.argv[1])
 
     #ps = bkg_job.ProgramStatus(number_of_loops)
-    ps = bkg_job.API('data/bkg_process.yaml')
+    #ps = bkg_job.API('data/bkg_process.yaml')
+    ps = bkg_job.API('data/bkg_process_windows.yaml')
 
 
     def on_start():
