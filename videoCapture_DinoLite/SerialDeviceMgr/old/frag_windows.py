@@ -122,7 +122,8 @@ def GetPicoDevice(deviceWILDCARD:str) -> str:
 
 
 def testfunc_direct_run():
-    serial_dev = init('/dev/tty.usbmodem101')
+    #serial_dev = init('/dev/tty.usbmodem101')
+    serial_dev = init('COM8')
     t=10
     while t>0:
         time.sleep(1.2)
@@ -132,6 +133,19 @@ def testfunc_direct_run():
         t-=1
         print(f't {t}')
     write(serial_dev, '0')
+
+
+def list_available_port():
+    import serial.tools.list_ports as list_ports
+    ports = list_ports.comports()
+    print(f'Got {len(ports)} serial devices: ')
+    for idx,port in enumerate(ports):
+        print(f'No.{idx}')
+        print(f'  Port: {port.device}')
+        print(f'  Description: {port.description}')
+        print(f'  Hardward ID: {port.hwid}')
+
+
 
 if __name__ == "__main__":
     testfunc_direct_run()

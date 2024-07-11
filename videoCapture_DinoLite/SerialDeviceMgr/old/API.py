@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import time
 #import SerialDeviceMgr
-import SerialDeviceMgr.frag_mac as frag # mac version
+import SerialDeviceMgr.frag as frag # mac version
 #from SerialDeviceMgr import frag_mac as frag
 COMMUNICATION_PERIOD = 0.4
 
 def BUG(mesg):
-    debug_mode = True
+    debug_mode = False
     if debug_mode:
         print(f'[BUG] {mesg}')
 
