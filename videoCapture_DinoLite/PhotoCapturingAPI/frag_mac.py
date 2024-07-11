@@ -28,11 +28,14 @@ def init(appNAME, initDELAY):
     return None
 
 
-
-def send_hotkey(app, hotKEY, workingDELAY):
+def set_foreground(app):
     app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+
+
+def send_hotkey(hotKEY, workingDELAY):
 # Send a hotkey (for example, Command + N to create a new document)
     pyautogui.hotkey(*hotKEY, interval=0.1)
+    time.sleep(workingDELAY)
 # Allow some time for the application to come to the foreground
 
 if __name__ == "__main__":

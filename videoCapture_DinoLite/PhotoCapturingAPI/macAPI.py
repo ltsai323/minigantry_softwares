@@ -13,15 +13,26 @@ def SetLog(primaryLOG, secondaryLOG):
     frag.PrimaryLog = primaryLOG
     frag.SecondaryLog = secondaryLOG
 
+def PrintHelp():
+    print('''
+            [PrintHelp] PhotoCapturingAPI.frag_mac
+               * init_delay:float,      delay for initialize application
+               * app_name:str,          app name used for activate the application
+               * work_delay:float,      delay for working. Waiting after hotkey sent.
+               * hotkey:list,
+               ''')
 class InputConf:
     def __init__(self,
                  init_delay:float,
                  app_name:str,
                  work_delay:float,
+                 hotkey:list,
+                 **xargs,
                  ):
         self.app_name = str(app_name)
         self.init_delay = float(init_delay)
         self.work_delay = float(work_delay)
+        self.hotkey = hotkey
 class API:
     def __init__(self,inputCONF:InputConf):
         self.conf = inputCONF
@@ -29,14 +40,15 @@ class API:
     def set(self, **xargs):
         #self.conf.work_delay = float(xargs['work_delay'])
         return
-        
+
     def list_setting(self):
         # a = [ { 'name': 'work_delay', 'type': 'text', 'default': str(self.conf.work_delay) }, ] # work_delay is only adjusted in yaml file
         return []
 
     def run(self):
         if self.app == None: return 0 # Once app is not activated or not in search list, disable thrunrun.
-        frag.send_hotkey_to(self.app, self.conf.work_delay)
+        frag.set_foreground(self.app)
+        frag.send_hotkey(self.conf.hotkey, self.conf.work_delay)
         return 1 # return status activate this app
 
 class test_api:
@@ -45,7 +57,7 @@ class test_api:
         #self.app = frag.init(self.conf.app_name, self.conf.init_delay)
     def set(self, **xargs):
         self.conf.work_delay = float(xargs['work_delay'])
-        
+
     def list_setting(self):
         a = [
                 { 'name': 'work_delay', 'type': 'text', 'default': str(self.conf.work_delay) },
@@ -68,6 +80,7 @@ def APIfactory(yamlDICT) -> API:
             return test_api(c)
         return API(c)
     except KeyError as e:
+        PrintHelp()
         print(f'[KeyError] Key "{e}" is required. Check the yaml file')
 
 
