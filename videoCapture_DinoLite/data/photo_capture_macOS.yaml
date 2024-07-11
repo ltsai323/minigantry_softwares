@@ -1,3 +1,6 @@
 app_name: 'TextEdit'
 init_delay: 2.0
 work_delay: 2.0
+hotkey:
+ - 'command'
+ - 'c'

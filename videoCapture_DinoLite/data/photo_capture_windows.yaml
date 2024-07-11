@@ -2,5 +2,7 @@ init_delay: 4
 # Find app_activate_str by executing power shell command "get-StartApps"
 app_activate_str: 'Microsoft.WindowsStore_8wekyb3d8bbwe!App' # window store
 window_name: 'Microsoft Store' # name from Task Manager
-
 work_delay: 2
+hotkey:
+  - 'ctrl'
+  - 'f4'

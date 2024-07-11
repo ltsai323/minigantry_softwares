@@ -3,8 +3,11 @@ operation_system: macOS
 'Capturing Delay': 4.0
 
 SerialDeviceMgr:
-  device_wildcard: '/dev/tty.usb*'
+  empty: empty
 PhotoCapturingAPI:
   app_name: 'TextEdit'
   init_delay: 2.0
   work_delay: 2.0
+  hotkey:
+    - command
+    - t

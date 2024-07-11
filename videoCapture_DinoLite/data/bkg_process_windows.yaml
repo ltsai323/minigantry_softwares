@@ -1,11 +1,22 @@
-OS: windows
-SerialDeviceMgr:
-  device_wildcard: '/dev/tty.usb*'
-PhotoCapturingAPI:
-  init_delay: 4
-  # Find app_activate_str by executing power shell command "get-StartApps"
-  app_activate_str: 'Microsoft.WindowsStore_8wekyb3d8bbwe!App' # window store
-  window_name: 'Microsoft Store' # name from Task Manager
-  work_delay: 2
+operation_system: test # only for test. No OS checking
 'Moving Delay': 0.1
 'Capturing Delay': 4.0
+
+SerialDeviceMgr:
+  empty: empty
+PhotoCapturingAPI:
+  init_delay: 4
+  work_delay: 2
+  # Find app_activate_str by executing power shell command "get-StartApps"
+# Example of searh result from `python3 frag_windows.py
+#DinoCapture 2.0          {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\DinoCapture 2.0\DinoCapture.exe
+  app_activate_str: '{7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\DinoCapture 2.0\DinoCapture.exe'
+  window_name: 'DinoCapture 2.0' # from Task Manager
+  hotkey:
+    - 'f11' # take photo # F7 and f7 are the same
+ #app_activate_str: 'Microsoft.WindowsStore_8wekyb3d8bbwe!App' # window store
+ #window_name: 'Microsoft Store' # name from Task Manager
+ #work_delay: 2
+ #hotkey:
+ #  - 'ctrl'
+ #  - 'f'
