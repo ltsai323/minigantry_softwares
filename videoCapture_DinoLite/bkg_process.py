@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 import time
 import threading
-#import frag_photo_capture_windows
-import SerialDeviceMgr.macAPI as serialDevAPI
-#import PhotoCapturingAPI.macAPI as photoCaptureAPI
-import PhotoCapturingAPI.windowsAPI as photoCaptureAPI
+
+#import SerialDeviceMgr.windowsAPI as serialDevAPI
+#import PhotoCapturingAPI.windowsAPI as photoCaptureAPI
+import SerialDeviceMgr.macAPI
+import PhotoCapturingAPI.macAPI
+
+import SerialDeviceMgr.windowsAPI
+import PhotoCapturingAPI.windowsAPI
 import yaml
 
 
 SLEEP_BKG = 1.0 # second
 MOVING_DELAY = 0.1 # this will be updated in yaml file
 CAPTUR_DELAY = 2.0 # this will be updated in yaml file
+debug_mode = False
 def BUG(mesg):
-    bug_mode = False
-    if bug_mode:
+    if debug_mode:
         print(f'[BUG] {mesg}')
 
 ### test func {{{
@@ -42,12 +46,17 @@ def SecondaryLog(mesg):
     print(f'[SecondaryLog] {mesg}')
 def SetLog(primaryLOGfunc, secondaryLOGfunc):
     BUG('Update log functions at background process')
-    serialDevAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
-    photoCaptureAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+    #serialDevAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+    #photoCaptureAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+    SerialDeviceMgr.macAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+    PhotoCapturingAPI.macAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+
+    SerialDeviceMgr.windowsAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+    PhotoCapturingAPI.windowsAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
     global PrimaryLog, SecondaryLog
     PrimaryLog = primaryLOGfunc
     SecondaryLog = secondaryLOGfunc
-    
+
 class ProgramStatus:
     def __init__(self):
         self.activatingFlag = threading.Event()
@@ -123,26 +132,54 @@ def testfunc_bkg_run_func(programSTATUS):
     t.join()
     exit()
 
+def SerialDevFactory(osVERSION, configDICT):
+    api = None
+    if osVERSION == 'test': # testing
+        api = SerialDeviceMgr.macAPI
+    if osVERSION == 'macOS':
+        api = SerialDeviceMgr.macAPI
+    if osVERSION == 'windows':
+        api = SerialDeviceMgr.windowsAPI
+
+    if api == None:
+        raise IOError(f'[UnknownConfig] Input OS version "{osVERSION}" is undefined. Abort....')
+    return api.APIfactory(configDICT)
+
+def PhotoCaptureFactory(osVERSION, configDICT):
+    api = None
+    if osVERSION == 'test': # testing
+        api = PhotoCapturingAPI.macAPI
+    if osVERSION == 'macOS':
+        api = PhotoCapturingAPI.macAPI
+    if osVERSION == 'windows':
+        api = PhotoCapturingAPI.windowsAPI
+
+    if api == None:
+        raise IOError(f'[UnknownConfig] Input OS version "{osVERSION}" is undefined. Abort....')
+    return api.APIfactory(configDICT)
+
 class API:
     def __init__(self, yamlFILE):
         self.code_blocker = 0
         with open(yamlFILE,'r') as fIN:
             self.configs = yaml.safe_load(fIN)
-        if self.configs['operation_system'] == 'test':
-            pass # ignore testing
-        elif serialDevAPI.OPERATION_SYSTEM != self.configs['operation_system']:
-            PrimaryLog('Wrong OS')
-            SecondaryLog(f'Loaded YAML file is suitable for {self.configs["operation_system"]} but code is for {serialDevAPI.OPERATION_SYSTEM}')
-            self.code_blocker = 1 # forbidden by OS error
-            return
-        elif photoCaptureAPI.OPERATION_SYSTEM != self.configs['operation_system']:
-            PrimaryLog('Wrong OS')
-            SecondaryLog(f'Loaded YAML file is suitable for {self.configs["operation_system"]} but code is for {serialDevAPI.OPERATION_SYSTEM}')
-            self.code_blocker = 1 # forbidden by OS error
-            return
+        #if self.configs['operation_system'] == 'test':
+        #    pass # ignore testing
+        #elif serialDevAPI.OPERATION_SYSTEM != self.configs['operation_system']:
+        #    PrimaryLog('Wrong OS')
+        #    SecondaryLog(f'Loaded YAML file is suitable for {self.configs["operation_system"]} but code is for {serialDevAPI.OPERATION_SYSTEM}')
+        #    self.code_blocker = 1 # forbidden by OS error
+        #    return
+        #elif photoCaptureAPI.OPERATION_SYSTEM != self.configs['operation_system']:
+        #    PrimaryLog('Wrong OS')
+        #    SecondaryLog(f'Loaded YAML file is suitable for {self.configs["operation_system"]} but code is for {serialDevAPI.OPERATION_SYSTEM}')
+        #    self.code_blocker = 1 # forbidden by OS error
+        #    return
 
-        self.components_minigantry_movement = serialDevAPI.APIfactory(self.configs['SerialDeviceMgr'])
-        self.components_photo_capture = photoCaptureAPI.APIfactory(self.configs['PhotoCapturingAPI'])
+        #self.components_minigantry_movement = serialDevAPI.APIfactory(self.configs['SerialDeviceMgr'])
+        #self.components_photo_capture = photoCaptureAPI.APIfactory(self.configs['PhotoCapturingAPI'])
+        self.components_minigantry_movement = SerialDevFactory(self.configs['operation_system'], self.configs['SerialDeviceMgr'])
+        self.components_photo_capture = PhotoCaptureFactory(self.configs['operation_system'], self.configs['PhotoCapturingAPI'])
 
         global CAPTUR_DELAY, MOVING_DELAY
         MOVING_DELAY = self.configs['Moving Delay']
@@ -155,8 +192,8 @@ class API:
         self.components_photo_capture.set(**xargs)
         try:
             global CAPTUR_DELAY, MOVING_DELAY
-            MOVING_DELAY = float(xargs['Moving Delay'])
-            CAPTUR_DELAY = float(xargs['Capturing Delay']) 
+            MOVING_DELAY = float(xargs['Moving Delay'] )
+            CAPTUR_DELAY = float(xargs['Capturing Delay'])
         except ValueError as e:
             BUG(f'[ErrorFromVariableSet] {e}')
             PrimaryLog('Invalid value')
@@ -222,57 +259,56 @@ class API:
         self.job_thread = bkg_run_job(self.programStatus)
     def run(self):
         if self.code_blocker != 0: return
-        self.dummy_run()
-        # def realFunc_minigantry_next_point(delayTIMER) -> int:
-        #     SecondaryLog('Sending command to Mini gantry')
-        #     ''' testing section '''
-        #     #run_status = self.components_minigantry_movement.run()
-        #     run_status = 10
-        #     ''' testing section '''
+        if debug_mode:
+            self.dummy_run()
+        else:
+            def realFunc_minigantry_next_point(delayTIMER) -> int:
+                SecondaryLog('Sending command to Mini gantry')
+                run_status = self.components_minigantry_movement.run()
 
-        #     time.sleep(delayTIMER)
-        #     if run_status == 0:
-        #         SecondaryLog('No further signal from mini gantry')
-        #     else:
-        #         SecondaryLog('Mini gantry finished the movement')
-        #     return run_status
-        # global jobComponent_minigantry_next_point # modify the function directly
-        # jobComponent_minigantry_next_point = realFunc_minigantry_next_point
 
-        # def realFunc_take_photo(delayTIMER) -> int:
-        #     SecondaryLog('Taking photo...')
-        #     ''' testing section '''
-        #     #run_status = self.components_minigantry_movement.run()
-        #     run_status = 1
-        #     ''' testing section '''
+                time.sleep(delayTIMER)
+                if run_status == 0:
+                    SecondaryLog('No further signal from mini gantry')
+                else:
+                    SecondaryLog('Mini gantry finished the movement')
+                return run_status
+            global jobComponent_minigantry_next_point # modify the function directly
+            jobComponent_minigantry_next_point = realFunc_minigantry_next_point
 
-        #     time.sleep(delayTIMER)
-        #     if run_status == 0:
-        #         SecondaryLog('Something Stucked photo capturing')
-        #     else:
-        #         SecondaryLog('Photo captured')
-        #     PrimaryLog(f'delaying photo taking {delayTIMER}')
-        #     return run_status
-        # global jobComponent_take_photo # modify the function directly
-        # jobComponent_take_photo = realFunc_take_photo
+            def realFunc_take_photo(delayTIMER) -> int:
+                SecondaryLog('Taking photo...')
+                run_status = self.components_photo_capture.run()
 
-        # self.programStatus = ProgramStatus()
-        # self.job_thread = bkg_run_job(self.programStatus)
-        
+
+                PrimaryLog(f'delaying photo taking {delayTIMER}')
+                time.sleep(delayTIMER)
+                if run_status == 0:
+                    SecondaryLog('Something Stucked photo capturing')
+                else:
+                    SecondaryLog('Photo captured')
+                return run_status
+            global jobComponent_take_photo # modify the function directly
+            jobComponent_take_photo = realFunc_take_photo
+
+            self.programStatus = ProgramStatus()
+            self.job_thread = bkg_run_job(self.programStatus)
+
 
     def start(self): self.programStatus.activatingFlag.set()
     def pause(self): self.programStatus.activatingFlag.clear()
-        
 
-    
-        
+
+
+
 
 
 def testfunc_useAPI():
     #bkgrun_api = API('data/bkg_process_macOS.yaml')
-    bkgrun_api = API('data/bkg_process.yaml')
+    bkgrun_api = API('data/bkg_process_windows.yaml')
     set_values = {}
     for l in bkgrun_api.list_setting():
+        BUG(f'got listed settings : {l}')
         n = l['name']
         v = 0
         if 'options' in l:
@@ -281,7 +317,7 @@ def testfunc_useAPI():
             v = l['default']
 
         set_values[n] = v
-        
+
 
     bkgrun_api.set(**set_values)
 
