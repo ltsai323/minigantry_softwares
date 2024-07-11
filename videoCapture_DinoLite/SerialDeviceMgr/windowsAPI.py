@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import time
-import SerialDeviceMgr.frag as frag # mac version
+import SerialDeviceMgr.frag as frag
 
-OPERATION_SYSTEM = 'macOS' # used for check code version
+OPERATION_SYSTEM = 'windows' # used for check code version
 COMMUNICATION_PERIOD = 0.4
 
-debug_mode = True
+debug_mode = False
 def BUG(mesg):
     if debug_mode:
         print(f'[BUG] {mesg}')
@@ -16,11 +16,8 @@ def SetLog(primaryLOG, secondaryLOG):
 
 
 class InputConf:
-    def __init__(self,
-                 device_wildcard:str = '',
-                 **xargs
-                 ):
-        self.listed_dev = frag.GetPicoDevice(device_wildcard)
+    def __init__(self, **xargs):
+        self.listed_dev = frag.list_available_port()
 
 class API:
     def __init__(self,inputCONF:InputConf):
@@ -42,12 +39,6 @@ class API:
         '''
         self.instance.SetValue()
         self.instance.Communicate(COMMUNICATION_PERIOD)
-        #while True:
-        #    time.sleep(COMMUNICATION_PERIOD)
-        #    stat = self.instance._Communicate()
-        #    BUG(f'status of the run is {stat}')
-        #    if stat == False:
-        #        break
         return self.instance.job_status
 
 
@@ -70,9 +61,12 @@ class test_api:
         1: this run is finished safely
         0: the whole job is stopped. (Finished or connection lost)
         '''
+        frag.SecondaryLog('test run start!!!')
         frag.write(self.instance.serial_device, '1')
         time.sleep(1)
         frag.write(self.instance.serial_device, '0')
+        time.sleep(0.5)
+        frag.SecondaryLog('test run stopped!!!')
 
         self.max_counter -= 1
         return self.max_counter >= 0
@@ -95,13 +89,27 @@ if __name__ == "__main__":
     def secondary_log(mesg):
         print(f'[s] {mesg}')
     SetLog(primary_log,secondary_log)
-    with open('../data/serial_device_mac.yaml','r') as f:
+    with open('../data/serial_device_windows.yaml','r') as f:
         import yaml
         yaml_dict = yaml.safe_load(f)
         c = InputConf(**yaml_dict)
-        api = API(c)
+        if debug_mode:
+            api = test_api(c)
+        else:
+            api = API(c)
+
+    all_settings = api.list_setting()
+    setting = [ setting['options'] for setting in all_settings if setting['name'] == 'TTY Device' ]
+    all_available_dev = setting[0]
+    print(f'[SerialDeviceCandidates] {all_available_dev}')
+    chosen_dev = [ dev for dev in all_available_dev if 'COM' in dev or 'usbmodem' in dev ]
+    print(f'[ChosenDevices] Filtered serial devices {chosen_dev}. Use the first one {chosen_dev}')
+    #print(f'[ChosenDevices] Filtered serial devices {chosen_dev}. Use the first one {chosen_dev[0]}')
 
     print(api.list_setting())
-    api.set( **{'TTY Device': '/dev/tty.usbmodem101'} )
+    api.set( **{'TTY Device': chosen_dev[0]} )
     print(api.device_name)
+    print('[Run started] hiiii')
+    api.run()
+    api.run()
     api.run()
