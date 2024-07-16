@@ -4,8 +4,8 @@ import threading
 
 #import SerialDeviceMgr.windowsAPI as serialDevAPI
 #import PhotoCapturingAPI.windowsAPI as photoCaptureAPI
-import SerialDeviceMgr.macAPI
-import PhotoCapturingAPI.macAPI
+#import SerialDeviceMgr.macAPI
+#import PhotoCapturingAPI.macAPI
 
 import SerialDeviceMgr.windowsAPI
 import PhotoCapturingAPI.windowsAPI
@@ -48,8 +48,8 @@ def SetLog(primaryLOGfunc, secondaryLOGfunc):
     BUG('Update log functions at background process')
     #serialDevAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
     #photoCaptureAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
-    SerialDeviceMgr.macAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
-    PhotoCapturingAPI.macAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+    #SerialDeviceMgr.macAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
+    #PhotoCapturingAPI.macAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
 
     SerialDeviceMgr.windowsAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
     PhotoCapturingAPI.windowsAPI.SetLog(primaryLOGfunc,secondaryLOGfunc)
