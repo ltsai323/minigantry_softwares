@@ -85,7 +85,7 @@ def APIfactory(yamlDICT) -> API:
 
 
 if __name__ == "__main__":
-    with open('../data/photo_capture_macOS.yaml','r') as f:
+    with open('data/photo_capture_macOS.yaml','r') as f:
         import yaml
         yaml_dict = yaml.safe_load(f)
         c = InputConf(**yaml_dict)

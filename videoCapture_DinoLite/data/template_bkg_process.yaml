@@ -3,7 +3,7 @@ operation_system: test # only for test. No OS checking
 'Capturing Delay': 4.0
 
 SerialDeviceMgr: # content from serial_device_*.yaml
-  device_wildcard: '/dev/tty.usb*'
+  empty: tmpty
 PhotoCapturingAPI: # content from photo_capture_*.yaml
   init_delay: 4
   # Find app_activate_str by executing power shell command "get-StartApps"

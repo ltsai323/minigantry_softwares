@@ -96,7 +96,7 @@ if __name__ == "__main__":
     window_name = 'Microsoft Store'
 
     #conf = InputConf(5, app_activate_str, window_name, 2)
-    with open('../data/photo_capture_windows.yaml','r') as f:
+    with open('data/photo_capture_windows.yaml','r') as f:
         yaml_dict = yaml.safe_load(f)
         c = InputConf(**yaml_dict)
         if debug_mode:

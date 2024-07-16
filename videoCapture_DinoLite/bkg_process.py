@@ -94,6 +94,34 @@ def run_job(progSTAT:ProgramStatus,):
     SecondaryLog(f'{capIdx} photo captured')
     print('[JobFinished] background job is stopped')
 
+def run_job_2(progSTAT:ProgramStatus,):
+
+    #totIDX = progSTAT.totIdx
+    programACTIVATING = progSTAT.programIsAlive
+    keepCAPTURING = progSTAT.activatingFlag
+
+    capIdx = 0
+    while programACTIVATING.is_set():
+        if keepCAPTURING.is_set():
+            capIdx += 1
+            PrimaryLog(f'Capturing image {capIdx}') # capIdx from 1 ~ N
+            job_stat1 = jobComponent_minigantry_next_point(MOVING_DELAY)
+            job_stat2 = jobComponent_take_photo(CAPTUR_DELAY)
+
+            if   job_stat1 == 0:
+                PrimaryLog('Job finished from Mini gantry')
+                programACTIVATING.clear()
+            elif job_stat2 == 0:
+                PrimaryLog('Job finished from photo taking')
+                programACTIVATING.clear()
+        else:
+            PrimaryLog(f'Capturing image {capIdx} is Paused')
+            SecondaryLog('')
+            time.sleep(SLEEP_BKG)
+    # the GUI is no longer activating, so not to show anything at the end.
+    PrimaryLog('program ended')
+    SecondaryLog(f'{capIdx} photo captured')
+    print('[JobFinished] background job is stopped')
 
 
 

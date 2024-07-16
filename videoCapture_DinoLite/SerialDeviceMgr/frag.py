@@ -67,6 +67,8 @@ class MachineStatus:
         self.stat_write = STAT_OFF
         self.job_status = 1 if serialDEV else 0
         self.job_status_counter = MachineStatus.MAX_COUNTER
+        if self.job_status:
+            write(self.serial_device, self.stat_write) # initialize IO as program started
 
     def communicate_once(self) -> bool:
         '''

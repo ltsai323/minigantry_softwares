@@ -1,6 +1,6 @@
-operation_system: test # only for test. No OS checking
+operation_system: windows # only for test. No OS checking
 'Moving Delay': 0.1
-'Capturing Delay': 4.0
+'Capturing Delay': 10.0
 
 SerialDeviceMgr:
   empty: empty

@@ -89,7 +89,7 @@ if __name__ == "__main__":
     def secondary_log(mesg):
         print(f'[s] {mesg}')
     SetLog(primary_log,secondary_log)
-    with open('../data/serial_device_windows.yaml','r') as f:
+    with open('data/serial_device_windows.yaml','r') as f:
         import yaml
         yaml_dict = yaml.safe_load(f)
         c = InputConf(**yaml_dict)
