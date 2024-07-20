@@ -2,6 +2,7 @@
 import time
 import threading
 
+# need a machanism for loading separately
 #import SerialDeviceMgr.windowsAPI as serialDevAPI
 #import PhotoCapturingAPI.windowsAPI as photoCaptureAPI
 #import SerialDeviceMgr.macAPI
@@ -21,7 +22,7 @@ def BUG(mesg):
         print(f'[BUG] {mesg}')
 
 ### test func {{{
-def jobComponent_minigantry_next_point( delayTIMER ) -> int:
+def jobComponent_minigantry_next_point(delayTIMER, forceSTOP=threading.Event()) -> int:
     '''
     job status is returned.
     '''
@@ -29,13 +30,20 @@ def jobComponent_minigantry_next_point( delayTIMER ) -> int:
     SecondaryLog('moving position to next point')
     time.sleep(delayTIMER)
     return 1
-def jobComponent_take_photo(delayTIMER) -> int:
+def jobComponent_take_photo(delayTIMER, forceSTOP=threading.Event()) -> int:
     '''
     job status is returned.
     '''
     #raise NotImplementedError('This function is required to be overwritten before use')
     SecondaryLog('capturing photon...')
     time.sleep(delayTIMER)
+    return 1
+
+def jobStandBy_minigantry(forceSTOP=threading.Event()) -> int:
+    raise NotImplementedError('This function is required to be overwritten before use')
+    return 1
+def jobStandBy_take_photo(forceSTOP=threading.Event()) -> int:
+    raise NotImplementedError('This function is required to be overwritten before use')
     return 1
 ### test func end }}}
 
@@ -60,68 +68,66 @@ def SetLog(primaryLOGfunc, secondaryLOGfunc):
 class ProgramStatus:
     def __init__(self):
         self.activatingFlag = threading.Event()
-        self.programIsAlive = threading.Event()
-        self.programIsAlive.set()
+
+        self.forceStopping = threading.Event()
+
+        self.standByControl = threading.Event()
 
 
 
 def run_job(progSTAT:ProgramStatus,):
-
     #totIDX = progSTAT.totIdx
-    programACTIVATING = progSTAT.programIsAlive
+    # asdf need to add force_stop event to function
+    forceSTOPPING = progSTAT.forceStopping
     keepCAPTURING = progSTAT.activatingFlag
+    inSTANDBYmode = progSTAT.standByControl
 
+
+    PrimaryLog('Program Stand By ..')
+    SecondaryLog('')
+    while True: # waiting for GUI starts standby mode.
+        if forceSTOPPING.is_set(): break
+        if inSTANDBYmode.is_set():
+            stat1 = jobStandBy_minigantry(forceSTOPPING)
+            stat2 = jobStandBy_take_photo(forceSTOPPING)
+            if stat1 and stat2:
+                PrimaryLog('Program Activated')
+                SecondaryLog('')
+                keepCAPTURING.set()
+            else:
+                PrimaryLog('Abort Stand by')
+                if stat1 == 0:
+                    SecondaryLog('Error state from mini gantry')
+                if stat2 == 0:
+                    SecondaryLog('Error state from taking photo')
+        else:
+            SecondaryLog('Waiting for GUI start')
+
+    # main program
     capIdx = 0
-    while programACTIVATING.is_set():
+    while True:
+        if forceSTOPPING.is_set(): break
         if keepCAPTURING.is_set():
             capIdx += 1
             PrimaryLog(f'Capturing image {capIdx}') # capIdx from 1 ~ N
-            job_stat1 = jobComponent_minigantry_next_point(MOVING_DELAY)
-            job_stat2 = jobComponent_take_photo(CAPTUR_DELAY)
-
+            job_stat1 = jobComponent_take_photo(CAPTUR_DELAY,forceSTOPPING)
             if   job_stat1 == 0:
-                PrimaryLog('Job finished from Mini gantry')
-                programACTIVATING.clear()
-            elif job_stat2 == 0:
                 PrimaryLog('Job finished from photo taking')
-                programACTIVATING.clear()
+                forceSTOPPING.set()
+
+            job_stat2 = jobComponent_minigantry_next_point(MOVING_DELAY,forceSTOPPING)
+            if job_stat2 == 0:
+                PrimaryLog('Job finished from Mini gantry')
+                forceSTOPPING.set()
         else:
             PrimaryLog(f'Capturing image {capIdx} is Paused')
-            SecondaryLog('')
+            SecondaryLog('Press GUI button to continue')
             time.sleep(SLEEP_BKG)
     # the GUI is no longer activating, so not to show anything at the end.
     PrimaryLog('program ended')
     SecondaryLog(f'{capIdx} photo captured')
     print('[JobFinished] background job is stopped')
 
-def run_job_2(progSTAT:ProgramStatus,):
-
-    #totIDX = progSTAT.totIdx
-    programACTIVATING = progSTAT.programIsAlive
-    keepCAPTURING = progSTAT.activatingFlag
-
-    capIdx = 0
-    while programACTIVATING.is_set():
-        if keepCAPTURING.is_set():
-            capIdx += 1
-            PrimaryLog(f'Capturing image {capIdx}') # capIdx from 1 ~ N
-            job_stat1 = jobComponent_minigantry_next_point(MOVING_DELAY)
-            job_stat2 = jobComponent_take_photo(CAPTUR_DELAY)
-
-            if   job_stat1 == 0:
-                PrimaryLog('Job finished from Mini gantry')
-                programACTIVATING.clear()
-            elif job_stat2 == 0:
-                PrimaryLog('Job finished from photo taking')
-                programACTIVATING.clear()
-        else:
-            PrimaryLog(f'Capturing image {capIdx} is Paused')
-            SecondaryLog('')
-            time.sleep(SLEEP_BKG)
-    # the GUI is no longer activating, so not to show anything at the end.
-    PrimaryLog('program ended')
-    SecondaryLog(f'{capIdx} photo captured')
-    print('[JobFinished] background job is stopped')
 
 
 
@@ -191,26 +197,11 @@ class API:
         self.code_blocker = 0
         with open(yamlFILE,'r') as fIN:
             self.configs = yaml.safe_load(fIN)
-        #if self.configs['operation_system'] == 'test':
-        #    pass # ignore testing
-        #elif serialDevAPI.OPERATION_SYSTEM != self.configs['operation_system']:
-        #    PrimaryLog('Wrong OS')
-        #    SecondaryLog(f'Loaded YAML file is suitable for {self.configs["operation_system"]} but code is for {serialDevAPI.OPERATION_SYSTEM}')
-        #    self.code_blocker = 1 # forbidden by OS error
-        #    return
-        #elif photoCaptureAPI.OPERATION_SYSTEM != self.configs['operation_system']:
-        #    PrimaryLog('Wrong OS')
-        #    SecondaryLog(f'Loaded YAML file is suitable for {self.configs["operation_system"]} but code is for {serialDevAPI.OPERATION_SYSTEM}')
-        #    self.code_blocker = 1 # forbidden by OS error
-        #    return
-
-        #self.components_minigantry_movement = serialDevAPI.APIfactory(self.configs['SerialDeviceMgr'])
-        #self.components_photo_capture = photoCaptureAPI.APIfactory(self.configs['PhotoCapturingAPI'])
         self.components_minigantry_movement = SerialDevFactory(self.configs['operation_system'], self.configs['SerialDeviceMgr'])
         self.components_photo_capture = PhotoCaptureFactory(self.configs['operation_system'], self.configs['PhotoCapturingAPI'])
 
         global CAPTUR_DELAY, MOVING_DELAY
-        MOVING_DELAY = self.configs['Moving Delay']
+        #MOVING_DELAY = self.configs['Moving Delay']
         CAPTUR_DELAY = self.configs['Capturing Delay']
 
 
@@ -220,7 +211,7 @@ class API:
         self.components_photo_capture.set(**xargs)
         try:
             global CAPTUR_DELAY, MOVING_DELAY
-            MOVING_DELAY = float(xargs['Moving Delay'] )
+            #MOVING_DELAY = float(xargs['Moving Delay'] )
             CAPTUR_DELAY = float(xargs['Capturing Delay'])
         except ValueError as e:
             BUG(f'[ErrorFromVariableSet] {e}')
@@ -235,9 +226,10 @@ class API:
         BUG(self.components_minigantry_movement.list_setting())
         o.extend(self.components_minigantry_movement.list_setting())
         o.extend(self.components_photo_capture.list_setting())
-        o.append( {'name': 'Moving Delay'   , 'type': 'text', 'default': MOVING_DELAY} )
+        #o.append( {'name': 'Moving Delay'   , 'type': 'text', 'default': MOVING_DELAY} )
         o.append( {'name': 'Capturing Delay', 'type': 'text', 'default': CAPTUR_DELAY} )
         return o
+    '''
     def dummy_run(self):
         if self.code_blocker != 0: return
         def dummy_minigantry_next_point(delayTIMER) -> int:
@@ -277,54 +269,62 @@ class API:
         jobComponent_take_photo = dummy_take_photo
 
 
-        #def A(mesg):
-        #    print(f'[AAAAA] {mesg}')
-        #def a(mesg):
-        #    print(f'[aaaaa] {mesg}')
-        #SetLog(A,a)
-
         self.programStatus = ProgramStatus()
         self.job_thread = bkg_run_job(self.programStatus)
+        '''
     def run(self):
         if self.code_blocker != 0: return
         if debug_mode:
-            self.dummy_run()
+            pass
+            ''' self.dummy_run() '''
         else:
-            def realFunc_minigantry_next_point(delayTIMER) -> int:
-                SecondaryLog('Sending command to Mini gantry')
-                run_status = self.components_minigantry_movement.run()
+            def realFunc_minigantry_next_point(delayTIMER, forceSTOP=threading.Event()) -> int:
+                SecondaryLog('[MiniGantry] Sending command to Mini gantry')
+                run_status = self.components_minigantry_movement.MainJob(rorceSTOP)
 
 
+                if forceSTOP.is_set(): return 0
                 time.sleep(delayTIMER)
                 if run_status == 0:
-                    SecondaryLog('No further signal from mini gantry')
+                    SecondaryLog('[MiniGantry] No further signal from mini gantry')
                 else:
-                    SecondaryLog('Mini gantry finished the movement')
+                    SecondaryLog('[MiniGantry] Finished the movement')
                 return run_status
             global jobComponent_minigantry_next_point # modify the function directly
             jobComponent_minigantry_next_point = realFunc_minigantry_next_point
 
-            def realFunc_take_photo(delayTIMER) -> int:
-                SecondaryLog('Taking photo...')
+            def realFunc_take_photo(delayTIMER, forceSTOP=threading.Event()) -> int:
+                SecondaryLog('[TakePhoto] Taking photo...')
+                #run_status = self.components_photo_capture.run(rorceSTOP)
                 run_status = self.components_photo_capture.run()
+                if forceSTOP.is_set(): return 0
 
-
-                PrimaryLog(f'delaying photo taking {delayTIMER}')
+                SecondaryLog(f'[TakePhoto] delaying {delayTIMER}')
                 time.sleep(delayTIMER)
                 if run_status == 0:
                     SecondaryLog('Something Stucked photo capturing')
                 else:
-                    SecondaryLog('Photo captured')
+                    SecondaryLog('[TakePhoto] Finished')
                 return run_status
             global jobComponent_take_photo # modify the function directly
             jobComponent_take_photo = realFunc_take_photo
+
+            def realStandBy_minigantry(forceSTOP=threading.Event()):
+                return self.components_minigantry_movement.MakeStandby(forceSTOP)
+            jobStandBy_minigantry = realStandBy_take_photo
+            def realStandBy_take_photo(forceSTOP=threading.Event()):
+                return self.components_photo_capture.MakeStandby(forceSTOP)
+            jobStandBy_take_photo = realStandBy_take_photo
 
             self.programStatus = ProgramStatus()
             self.job_thread = bkg_run_job(self.programStatus)
 
 
-    def start(self): self.programStatus.activatingFlag.set()
-    def pause(self): self.programStatus.activatingFlag.clear()
+
+    def start(self): self.programStatus.activatingFlag.set() # deactivated
+    def pause(self): self.programStatus.activatingFlag.clear() # deactivated
+    def force_stop(self): self.programStatus.forceStopping.set()
+    def standby(self): sefl.programStatus.standByControl.set()
 
 
 

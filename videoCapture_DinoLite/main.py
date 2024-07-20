@@ -21,13 +21,21 @@ if __name__ == "__main__":
 
     def on_start():
         global ps
-        ps.start()
+        #ps.start()
+        SecondaryLog('Start button is malfunctioning')
     def on_pause():
         global ps
-        ps.pause()
+        #ps.pause()
+        SecondaryLog('Pause button is malfunctioning')
     def set_configurables(values:dict):
         global ps
         ps.set(**values)
+        ps.standby()
+    def force_stop():
+        global ps
+        PrimaryLog('Force Stopped')
+        SecondaryLog('Force stopping the whole process...')
+        ps.force_stop()
 
 
 
@@ -41,9 +49,8 @@ if __name__ == "__main__":
 
     bkg_job.SetLog(myGUI.SetStatus,myGUI.SetAction)
     # run bkg job
-    #bkg_thread = bkg_job.bkg_run_job(ps)
     bkg_thread = ps.run()
     root.mainloop()
 
     # clear background job after close mark clicked
-    ps.programStatus.programIsAlive.clear()
+    ps.force_stop()
