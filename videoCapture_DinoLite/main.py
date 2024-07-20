@@ -8,6 +8,7 @@ import tkinter as tk
 
 DEFAULT_MOVING_DELAY = 4.0
 DEFAULT_CAPTURING_DELAY = 0.5
+debug_mode = True
 
 if __name__ == "__main__":
     import sys
@@ -47,7 +48,18 @@ if __name__ == "__main__":
     root = tk.Tk()
     myGUI = GUIMgr.CustomGUI(root, GUI_conf)
 
-    bkg_job.SetLog(myGUI.SetStatus,myGUI.SetAction)
+    def primary_log(mesg):
+        global myGUI
+        if debug_mode:
+            print(f'[Status] {mesg}')
+        myGUI.SetStatus(mesg)
+    def secondary_log(mesg):
+        global myGUI
+        if debug_mode:
+            print(f'[Action] {mesg}')
+        myGUI.SetAction(mesg)
+    bkg_job.SetLog(primary_log,secondary_log)
+    #bkg_job.SetLog(myGUI.SetStatus,myGUI.SetAction)
     # run bkg job
     bkg_thread = ps.run()
     root.mainloop()

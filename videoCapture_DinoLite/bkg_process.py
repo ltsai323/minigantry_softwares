@@ -85,23 +85,30 @@ def run_job(progSTAT:ProgramStatus,):
 
     PrimaryLog('Program Stand By ..')
     SecondaryLog('')
-    while True: # waiting for GUI starts standby mode.
-        if forceSTOPPING.is_set(): break
-        if inSTANDBYmode.is_set():
-            stat1 = jobStandBy_minigantry(forceSTOPPING)
-            stat2 = jobStandBy_take_photo(forceSTOPPING)
-            if stat1 and stat2:
-                PrimaryLog('Program Activated')
-                SecondaryLog('')
-                keepCAPTURING.set()
-            else:
-                PrimaryLog('Abort Stand by')
-                if stat1 == 0:
-                    SecondaryLog('Error state from mini gantry')
-                if stat2 == 0:
-                    SecondaryLog('Error state from taking photo')
-        else:
-            SecondaryLog('Waiting for GUI start')
+    while True:
+        if inSTANDBYmode.is_set(): break # waiting for entering into standby mode
+        if forceSTOPPING.is_set(): return
+
+        SecondaryLog('Waiting for GUI start')
+        time.sleep(SLEEP_BKG)
+
+    # standby mode triggers
+    stat1 = jobStandBy_minigantry(forceSTOPPING)
+    stat2 = jobStandBy_take_photo(forceSTOPPING)
+    if stat1 and stat2:
+        PrimaryLog('Program Activated')
+        SecondaryLog('')
+        keepCAPTURING.set()
+    else:
+        PrimaryLog('Error From Standby Mode')
+        print(f'[BUG] mini gantry status {stat1} and taking photo status {stat2}')
+        if stat1 == 0:
+            SecondaryLog('Error state from mini gantry')
+        if stat2 == 0:
+            SecondaryLog('Error state from taking photo')
+        return
+
+
 
     # main program
     capIdx = 0
@@ -229,49 +236,49 @@ class API:
         #o.append( {'name': 'Moving Delay'   , 'type': 'text', 'default': MOVING_DELAY} )
         o.append( {'name': 'Capturing Delay', 'type': 'text', 'default': CAPTUR_DELAY} )
         return o
-    '''
-    def dummy_run(self):
-        if self.code_blocker != 0: return
-        def dummy_minigantry_next_point(delayTIMER) -> int:
-            SecondaryLog('Sending command to Mini gantry')
-            ''' testing section '''
-            run_status = self.components_minigantry_movement.run()
-            BUG('Hiiiii this is dummy mini gantry next point')
-            #run_status = self.__get_counter()
-            ''' testing section '''
 
-            time.sleep(delayTIMER)
-            if run_status == 0:
-                SecondaryLog('No further signal from mini gantry')
-            else:
-                SecondaryLog('Mini gantry finished the movement')
-            BUG(f'delaying moving {delayTIMER}')
-            return run_status
-        global jobComponent_minigantry_next_point # modify the function directly
-        jobComponent_minigantry_next_point = dummy_minigantry_next_point
+    # def dummy_run(self):
+    #     if self.code_blocker != 0: return
+    #     def dummy_minigantry_next_point(delayTIMER) -> int:
+    #         SecondaryLog('Sending command to Mini gantry')
+    #         ''' testing section '''
+    #         run_status = self.components_minigantry_movement.run()
+    #         BUG('Hiiiii this is dummy mini gantry next point')
+    #         #run_status = self.__get_counter()
+    #         ''' testing section '''
 
-
-        def dummy_take_photo(delayTIMER) -> int:
-            SecondaryLog('Taking photo...')
-            ''' testing section '''
-            run_status = self.components_photo_capture.run()
-            BUG('Hiiiii this is dummy photo capturing procedure')
-            ''' testing section '''
-
-            time.sleep(delayTIMER)
-            if run_status == 0:
-                SecondaryLog('Something Stucked photo capturing')
-            else:
-                SecondaryLog('Photo captured')
-            BUG(f'delaying photo taking {delayTIMER}')
-            return run_status
-        global jobComponent_take_photo # modify the function directly
-        jobComponent_take_photo = dummy_take_photo
+    #         time.sleep(delayTIMER)
+    #         if run_status == 0:
+    #             SecondaryLog('No further signal from mini gantry')
+    #         else:
+    #             SecondaryLog('Mini gantry finished the movement')
+    #         BUG(f'delaying moving {delayTIMER}')
+    #         return run_status
+    #     global jobComponent_minigantry_next_point # modify the function directly
+    #     jobComponent_minigantry_next_point = dummy_minigantry_next_point
 
 
-        self.programStatus = ProgramStatus()
-        self.job_thread = bkg_run_job(self.programStatus)
-        '''
+    #     def dummy_take_photo(delayTIMER) -> int:
+    #         SecondaryLog('Taking photo...')
+    #         ''' testing section '''
+    #         run_status = self.components_photo_capture.run()
+    #         BUG('Hiiiii this is dummy photo capturing procedure')
+    #         ''' testing section '''
+
+    #         time.sleep(delayTIMER)
+    #         if run_status == 0:
+    #             SecondaryLog('Something Stucked photo capturing')
+    #         else:
+    #             SecondaryLog('Photo captured')
+    #         BUG(f'delaying photo taking {delayTIMER}')
+    #         return run_status
+    #     global jobComponent_take_photo # modify the function directly
+    #     jobComponent_take_photo = dummy_take_photo
+
+
+    #     self.programStatus = ProgramStatus()
+    #     self.job_thread = bkg_run_job(self.programStatus)
+
     def run(self):
         if self.code_blocker != 0: return
         if debug_mode:
@@ -280,7 +287,7 @@ class API:
         else:
             def realFunc_minigantry_next_point(delayTIMER, forceSTOP=threading.Event()) -> int:
                 SecondaryLog('[MiniGantry] Sending command to Mini gantry')
-                run_status = self.components_minigantry_movement.MainJob(rorceSTOP)
+                run_status = self.components_minigantry_movement.MainJob(forceSTOP)
 
 
                 if forceSTOP.is_set(): return 0
@@ -296,7 +303,8 @@ class API:
             def realFunc_take_photo(delayTIMER, forceSTOP=threading.Event()) -> int:
                 SecondaryLog('[TakePhoto] Taking photo...')
                 #run_status = self.components_photo_capture.run(rorceSTOP)
-                run_status = self.components_photo_capture.run()
+                #run_status = self.components_photo_capture.run()
+                run_status = 1
                 if forceSTOP.is_set(): return 0
 
                 SecondaryLog(f'[TakePhoto] delaying {delayTIMER}')
@@ -311,9 +319,13 @@ class API:
 
             def realStandBy_minigantry(forceSTOP=threading.Event()):
                 return self.components_minigantry_movement.MakeStandby(forceSTOP)
-            jobStandBy_minigantry = realStandBy_take_photo
+            global jobStandBy_minigantry # modify the function directly
+            jobStandBy_minigantry = realStandBy_minigantry
+
             def realStandBy_take_photo(forceSTOP=threading.Event()):
-                return self.components_photo_capture.MakeStandby(forceSTOP)
+                return 1 # always on
+                #return self.components_photo_capture.MakeStandby(forceSTOP)
+            global jobStandBy_take_photo # modify the function directly
             jobStandBy_take_photo = realStandBy_take_photo
 
             self.programStatus = ProgramStatus()
@@ -324,7 +336,7 @@ class API:
     def start(self): self.programStatus.activatingFlag.set() # deactivated
     def pause(self): self.programStatus.activatingFlag.clear() # deactivated
     def force_stop(self): self.programStatus.forceStopping.set()
-    def standby(self): sefl.programStatus.standByControl.set()
+    def standby(self): self.programStatus.standByControl.set()
 
 
 
