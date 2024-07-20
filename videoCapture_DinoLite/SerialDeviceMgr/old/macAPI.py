@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 import time
-#import SerialDeviceMgr
 import SerialDeviceMgr.frag as frag # mac version
-#from SerialDeviceMgr import frag_mac as frag
+
+OPERATION_SYSTEM = 'macOS' # used for check code version
 COMMUNICATION_PERIOD = 0.4
 
+debug_mode = True
 def BUG(mesg):
-    debug_mode = False
     if debug_mode:
         print(f'[BUG] {mesg}')
+def SetLog(primaryLOG, secondaryLOG):
+    BUG('Updating log function at SerialDeviceMgr')
+    frag.PrimaryLog = primaryLOG
+    frag.SecondaryLog = secondaryLOG
+
 
 class InputConf:
     def __init__(self,
-                 device_wildcard:str = '',
+                 #device_wildcard:str = '',
+                 **xargs
                  ):
-        self.listed_dev = frag.GetPicoDevice(device_wildcard)
+        #self.listed_dev = frag.GetPicoDevice(device_wildcard)
+        self.listed_dev = frag.list_available_port()
 
 class API:
-    def __init__(self,inputCONF:frag):
+    def __init__(self,inputCONF:InputConf):
         self.conf = inputCONF
     def set(self, **xargs):
         self.device_name = xargs['TTY Device']
@@ -45,21 +52,6 @@ class API:
         return self.instance.job_status
 
 
-def APIfactory(yamlFILE):
-    with open(yamlFILE,'r') as f:
-        import yaml
-        yaml_dict = yaml.safe_load(f)
-        try:
-            c = InputConf(**yaml_dict)
-            return API(c)
-        except KeyError as e:
-            print(f'[KeyError] Key "{e}" is required. Check the yaml file')
-
-def SetLog(primaryLOG, secondaryLOG):
-    BUG('Updating log function at SerialDeviceMgr')
-    frag.PrimaryLog = primaryLOG
-    frag.SecondaryLog = secondaryLOG
-
 class test_api:
     def __init__(self,inputCONF:frag):
         self.conf = inputCONF
@@ -85,14 +77,32 @@ class test_api:
 
         self.max_counter -= 1
         return self.max_counter >= 0
+
+def APIfactory(yamlDICT) -> API:
+    try:
+        ### add input validation if needed
+        c = InputConf(**yamlDICT)
+        if debug_mode:
+            BUG('Create a test_api instance')
+            return test_api(c)
+        return API(c)
+    except KeyError as e:
+        print(f'[KeyError] Key "{e}" is required. Check the yaml file')
+
+
 if __name__ == "__main__":
     def primary_log(mesg):
         print(f'[p] {mesg}')
     def secondary_log(mesg):
         print(f'[s] {mesg}')
     SetLog(primary_log,secondary_log)
-    api = APIfactory('data/serial_device_mac.yaml')
+    with open('data/serial_device_mac.yaml','r') as f:
+        import yaml
+        yaml_dict = yaml.safe_load(f)
+        c = InputConf(**yaml_dict)
+        api = API(c)
+
     print(api.list_setting())
-    api.set( **{'TTY Device': '/dev/tty.usbmodem1101'} )
+    api.set( **{'TTY Device': '/dev/tty.usbmodem101'} )
     print(api.device_name)
     api.run()
