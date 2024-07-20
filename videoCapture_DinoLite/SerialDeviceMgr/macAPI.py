@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import time
 import SerialDeviceMgr.frag as frag
+import threading
 
 OPERATION_SYSTEM = 'macOS' # used for check code version
 COMMUNICATION_PERIOD = 0.4
@@ -31,45 +32,22 @@ class API:
         return [
                 { 'name': 'TTY Device', 'type': 'option', 'options': self.conf.listed_dev },
         ]
+    def MakeStandby(self, stopFLAG=threading.Event()) -> int:
+        self.instance.StandBy(stopFLAG)
+        return self.instance.job_status
+
+    def MainJob(self, stopFLAG=threading.Event()) -> int:
+        return self.instance.Communicate(stopFLAG)
     def run(self) -> int:
         '''
         Return job status is alive or not
         1: this run is finished safely
         0: the whole job is stopped. (Finished or connection lost)
         '''
-        self.instance.SetValue()
-        self.instance.Communicate(COMMUNICATION_PERIOD)
+        self.instance.Communicate()
         return self.instance.job_status
 
 
-class test_api:
-    def __init__(self,inputCONF:frag):
-        self.conf = inputCONF
-        self.max_counter = 5
-    def set(self, **xargs):
-        self.device_name = xargs['TTY Device']
-        BUG(f'Initializing device {self.device_name}')
-        self.instance = frag.MachineStatus(frag.init(self.device_name))
-
-    def list_setting(self) -> list:
-        return [
-                { 'name': 'TTY Device', 'type': 'option', 'options': self.conf.listed_dev },
-        ]
-    def run(self) -> int:
-        '''
-        Return job status is alive or not
-        1: this run is finished safely
-        0: the whole job is stopped. (Finished or connection lost)
-        '''
-        frag.SecondaryLog('test run start!!!')
-        frag.write(self.instance.serial_device, '1')
-        time.sleep(1)
-        frag.write(self.instance.serial_device, '0')
-        time.sleep(0.5)
-        frag.SecondaryLog('test run stopped!!!')
-
-        self.max_counter -= 1
-        return self.max_counter >= 0
 
 def APIfactory(yamlDICT) -> API:
     try:
@@ -77,6 +55,7 @@ def APIfactory(yamlDICT) -> API:
         c = InputConf(**yamlDICT)
         if debug_mode:
             BUG('Create a test_api instance')
+            BUG('No test api in code') # asdf
             return test_api(c)
         return API(c)
     except KeyError as e:

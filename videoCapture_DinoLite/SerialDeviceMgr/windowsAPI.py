@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import time
-import SerialDeviceMgr.frag_test as frag
+import SerialDeviceMgr.frag as frag
 import threading
 
 OPERATION_SYSTEM = 'windows' # used for check code version
@@ -33,8 +33,9 @@ class API:
                 { 'name': 'TTY Device', 'type': 'option', 'options': self.conf.listed_dev },
         ]
     def MakeStandby(self, stopFLAG=threading.Event()) -> int:
-        return self.instance.StandBy(stopFLAG)
-        
+        self.instance.StandBy(stopFLAG)
+        return self.instance.job_status
+
     def MainJob(self, stopFLAG=threading.Event()) -> int:
         return self.instance.Communicate(stopFLAG)
     def run(self) -> int:
