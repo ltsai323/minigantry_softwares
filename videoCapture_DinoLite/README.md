@@ -6,9 +6,6 @@ pip3 install pyautogui pywin32
 ```
 
 
-## executables
-For windows, use `run.ps1`. For macOS, use `run.sh`
-
 ### Windows
 #### Initialize
 1. Install Python3 from **Microsoft Store**
@@ -18,6 +15,12 @@ For windows, use `run.ps1`. For macOS, use `run.sh`
 #### Running
 1. Download [VcXsrv configuration](https://github.com/ltsai323/NTUMAC_dockerized_softwares/blob/master/config.xlaunch) and execute this configuration everytime.
 1. **run.bat** execute program
+
+
+### MacOS
+1. Install and open XQuarts
+2. Install Dino Capture
+3.  `sh run.sh`
 
 
 ### Debug
