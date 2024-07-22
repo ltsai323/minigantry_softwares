@@ -34,12 +34,13 @@ class CustomGUI:
         self.create_dynamic_inputs(guiCONFITUABLE.configurations, timer_font)
 
         # Create the button
-        self.set_button = tk.Button(root, text='Set', command=self.set_btn)
-        self.set_button.pack(pady=10, side=tk.LEFT)
+        self.set_button = tk.Button(root, text='Set Values', command=self.set_btn)
+        self.set_button.pack(pady=10, side=tk.RIGHT)
 
-        # Create and place the Start button
-        self.start_button = tk.Button(root, text='Start', command=lambda:self.flip_btn(guiCONFITUABLE.startFUNC, guiCONFITUABLE.pauseFUNC))
-        self.start_button.pack(pady=10, side=tk.RIGHT)
+        # remove this button
+        ## Create and place the Start button
+        #self.start_button = tk.Button(root, text='Start', command=lambda:self.flip_btn(guiCONFITUABLE.startFUNC, guiCONFITUABLE.pauseFUNC))
+        #self.start_button.pack(pady=10, side=tk.RIGHT)
         if debug_mode:
             self.chk_button = tk.Button(root, text='check', command=lambda:print(f'current window size {self.root.winfo_width()} x {self.root.winfo_height()}'))
             self.chk_button.pack(pady=10, side=tk.LEFT)
@@ -73,7 +74,7 @@ class CustomGUI:
         except ValueError:
             print("Please enter valid values.")
 
-    def flip_btn(self, callbackFUNCstart, callbackFUNCstop):
+    def flip_btn(self, callbackFUNCstart, callbackFUNCstop): # no more needed because start/pause button is removed
         if self.set_button['state'] != tk.DISABLED:
             Status('Set Delay Time !')
             Action('ERROR')

@@ -138,15 +138,46 @@ def searchAppsInPowerShell(appNAME:str) -> tuple:
     cmd_output = subprocess.run(['powershell', '-Command', '$myobj=Get-StartApps -Name {appNAME} | Write-Output $myobj.AppID'], capture_output=True, text=True)
     candidate_appID = cmd_output.strip().split('\n')
     return (candidate_names, candidate_appID)
+
+
+def PrintHelp():
+    print('========================================')
+    print('= Creating used yaml from template     =')
+    print('= Input arguments:                     =')
+    print('= 1. Input yaml template               =')
+    print('= 2. Output yaml file name             =')
+    print('= 3. App name for searching            =')
+    print('= This software used power shell cmd   =')
+    print('= "Get-StartApps" and use the result   =')
+    print('= creating yaml file                   =')
+    print('= Creating used yaml from template     =')
+    print('========================================')
+    exit(1)
+
+
+def GetArg_inputTemplate(argv):
+    try:
+        return argv[1]
+    except:
+        PrintHelp()
+def GetArg_outputFileName(argv):
+    return argv[2] if len(argv)>2 else 'test_output.yaml'
+def GetArg_searchAppName(argv):
+    return argv[3] if len(argv)>3 else 'Dino Capture'
 if __name__ == "__main__":
+    import sys
+    inputYAMLtemplate = GetArg_inputTemplate(sys.argv)
+    outputFILEname = GetArg_outputFileName(sys.argv)
+    searchAPPname = GetArg_searchAppName(sys.argv)
+
     #listAllApps()
-    candidate_names, candidate_appIDs = searchAppsInPowerShell('Dino Capture')
+    candidate_names, candidate_appIDs = searchAppsInPowerShell(searchAPPname)
     app_activate_str = showOptions(candidate_names)
     idx = candidate_names.index(app_activate_str)
     window_name = candidate_appIDs[idx]
 
     createYamlFile(
-            'data/bkg_process_windows_template.yaml',
-            'bkg_process_windows__test.yaml',
-            app_activate_str=app_activate_str, window_name='kkkk')
+            inputYAMLtemplate,
+            outputFILEname,
+            app_activate_str=app_activate_str, window_name=window_name)
 
