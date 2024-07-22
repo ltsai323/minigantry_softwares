@@ -7,7 +7,7 @@ function Check-ModuleInstalled {
         [string]$moduleName
     )
 
-    $result = python -m pip show $moduleName
+    $result = python3 -m pip show $moduleName
     return $result -ne $null
 }
 
@@ -18,7 +18,7 @@ function Install-Module {
     )
 
     Write-Host "Installing module: $moduleName"
-    python -m pip install $moduleName
+    python3 -m pip install $moduleName
 }
 
 # Loop through each module and check if it is installed
