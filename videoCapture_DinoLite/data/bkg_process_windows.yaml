@@ -14,9 +14,3 @@ PhotoCapturingAPI:
   window_name: 'DinoCapture 2.0' # from Task Manager
   hotkey:
     - 'f11' # take photo # F7 and f7 are the same
- #app_activate_str: 'Microsoft.WindowsStore_8wekyb3d8bbwe!App' # window store
- #window_name: 'Microsoft Store' # name from Task Manager
- #work_delay: 2
- #hotkey:
- #  - 'ctrl'
- #  - 'f'
