@@ -30,4 +30,4 @@ The default configurations are stored into [data/bkg_process_windows.yaml](https
 This program searches the listed serial port from computer. Choose the serial port related to Raspberry Pi Pico from GUI.
 
 ## Special Note
-*** Use Dino Capture 2.0 instead of 3.0 because only 2.0 accepts hotkey sent from python script. ***
+** Use Dino Capture 2.0 instead of 3.0 because only 2.0 accepts hotkey sent from python script. **
