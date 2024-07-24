@@ -28,4 +28,6 @@ pip3 install pyautogui pywin32
 The default configurations are stored into [data/bkg_process_windows.yaml](https://github.com/ltsai323/minigantry_softwares/blob/main/videoCapture_DinoLite/data/bkg_process_windows.yaml). You can modify the values if needed.
 #### Choose corrected serial port
 This program searches the listed serial port from computer. Choose the serial port related to Raspberry Pi Pico from GUI.
-### Use Dino Capture 2.0 instead of 3.0 because 3.0 cannot accept script sending hotkey to GUI.
+
+## Special Note
+*** Use Dino Capture 2.0 instead of 3.0 because only 2.0 accepts hotkey sent from python script. ***
