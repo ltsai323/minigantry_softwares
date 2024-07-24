@@ -1,0 +1,14 @@
+operation_system: windows
+'Moving Delay': 0.1
+'Capturing Delay': 1
+
+SerialDeviceMgr:
+  empty: empty
+PhotoCapturingAPI:
+  init_delay: 6
+  work_delay: 2
+  app_activate_str: 'Microsoft.WindowsStore_8wekyb3d8bbwe!App'
+  window_name: 'Microsoft Store'
+  hotkey:
+    - 'ctrl'
+    - 'f'

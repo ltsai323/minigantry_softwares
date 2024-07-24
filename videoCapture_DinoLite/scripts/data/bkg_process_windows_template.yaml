@@ -1,13 +1,14 @@
 operation_system: windows
 'Moving Delay': 0.1
-'Capturing Delay': 10.0
+'Capturing Delay': 0.1
+# total capturing delay is capturing dealy + work_delay
 
 SerialDeviceMgr:
   empty: empty
 PhotoCapturingAPI:
-  init_delay: 4
+  init_delay: 6
   work_delay: 2
   app_activate_str: '{app_activate_str}'
   window_name: '{window_name}'
   hotkey:
-    - 'f11'
+    - 'F11'

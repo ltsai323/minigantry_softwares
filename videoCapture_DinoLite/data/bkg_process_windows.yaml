@@ -1,16 +1,14 @@
-operation_system: windows # only for test. No OS checking
+operation_system: windows
 'Moving Delay': 0.1
-'Capturing Delay': 10.0
+'Capturing Delay': 0.1
+# total capturing delay is capturing dealy + work_delay
 
 SerialDeviceMgr:
   empty: empty
 PhotoCapturingAPI:
-  init_delay: 4
-  work_delay: 2
-  # Find app_activate_str by executing power shell command "get-StartApps"
-# Example of searh result from `python3 frag_windows.py
-#DinoCapture 2.0          {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\DinoCapture 2.0\DinoCapture.exe
+  init_delay: 6
+  work_delay: 0.5
   app_activate_str: '{7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\DinoCapture 2.0\DinoCapture.exe'
-  window_name: 'DinoCapture 2.0' # from Task Manager
+  window_name: 'DinoCapture 2.0'
   hotkey:
-    - 'f11' # take photo # F7 and f7 are the same
+    - 'F11' # not to use f11.
