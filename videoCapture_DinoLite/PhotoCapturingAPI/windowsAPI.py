@@ -3,6 +3,7 @@ import PhotoCapturingAPI.frag_windows as frag
 import time
 import yaml
 import pyautogui
+import threading
 OPERATION_SYSTEM = 'windows'
 
 debug_mode = False
@@ -52,8 +53,9 @@ class API:
     def list_setting(self):
         return []
 
-    def run(self):
+    def run(self, stopFLAG=threading.Event()):
         self.w.set_foreground()
+        BUG(f'Got hotkey : {self.conf.hotkey}')
         frag.send_hotkey(self.conf.hotkey, self.conf.work_delay)
         #pyautogui.hotkey(*self.conf.hotkey, interval=0.1)
         #time.sleep(self.conf.work_delay)
@@ -64,11 +66,11 @@ class test_api:
         self.conf = inputCONF
         time.sleep(self.conf.init_delay)
     def set(self, **xargs):
-        self.conf.work_delay = float(xargs['work_delay_at_photoCapture'])
+        self.conf.work_delay = float(xargs['photo capture time'])
 
     def list_setting(self):
         a = [
-                { 'name': 'work_delay_at_photoCapture', 'type': 'text', 'default': str(self.conf.work_delay) },
+                { 'name': 'photo capture time', 'type': 'text', 'default': str(self.conf.work_delay) },
                 ]
         return a
 
@@ -106,3 +108,4 @@ if __name__ == "__main__":
 
     for i in range(5):
         api.run()
+        time.sleep(2)

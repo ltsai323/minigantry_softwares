@@ -38,13 +38,13 @@ class API:
 
     def MainJob(self, stopFLAG=threading.Event()) -> int:
         return self.instance.Communicate(stopFLAG)
-    def run(self) -> int:
+    def run(self, stopFLAG=threading.Event()) -> int:
         '''
         Return job status is alive or not
         1: this run is finished safely
         0: the whole job is stopped. (Finished or connection lost)
         '''
-        self.instance.Communicate()
+        self.instance.Communicate(stopFLAG)
         return self.instance.job_status
 
 

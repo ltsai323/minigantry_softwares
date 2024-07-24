@@ -5,6 +5,11 @@ import time
 import pyautogui
 import yaml
 
+debug_mode = True
+def BUG(mesg):
+    if debug_mode:
+        print(f'[BUG] {mesg}')
+
 def PrimaryLog(mesg): print(f'[Status] {mesg}')
 def SecondaryLog(mesg): print(f'[Action] {mesg}')
 
@@ -40,11 +45,13 @@ class WindowMgr:
 
     def _window_enum_callback(self, hwnd, wildcard):
         if re.match(wildcard, str(win32gui.GetWindowText(hwnd))) is not None:
+            BUG(f'[GotWindowName] {str(win32gui.GetWindowText(hwnd))} with _handle={hwnd}')
             self._handle = hwnd
 
     def find_window_wildcard(self, wildcard):
         self._handle = None
         win32gui.EnumWindows(self._window_enum_callback, wildcard)
+        BUG(f'[Got Handle] (type:{type(self._handle)}) - {self._handle}')
         if self._handle == None:
             PrimaryLog('ApplicationNotOpened')
             SecondaryLog(f'WindowMgr found no window from wildcard "{wildcard}"')
@@ -63,7 +70,7 @@ class WindowMgr:
     def IsAlive(self):
         return self._alive
 
-def send_hotkey(hotKEY, workingDELAY):
+def send_hotkey(hotKEY:list, workingDELAY):
     pyautogui.hotkey(*hotKEY, interval=0.1)
     time.sleep(workingDELAY)
 '''
