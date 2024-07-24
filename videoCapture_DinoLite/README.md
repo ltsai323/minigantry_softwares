@@ -5,6 +5,16 @@ pip3 install pyserial pyyaml
 pip3 install pyautogui pywin32
 ```
 
+## Operation
+1. Plug **Raspberry Pi Pico** to computer
+1. Activate this program, it should activated correctivated application in OS.
+1. Accroading to the GUI shown, set the related value. That this GUI will start standby mode.
+1. Mini gantry activate job and go to first point.
+1. Adjust the focus point manually.
+1. Press *Start button* on mini gantry.
+1. Mini gantry will tell GUI when to stop.
+
+* Note that if you want to pause the job, just press *Start Button* on mini gantry.
 
 ### Windows
 #### Initialize
