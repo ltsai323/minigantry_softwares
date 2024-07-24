@@ -6,7 +6,7 @@ import yaml
 debug_mode = False
 def BUG(mesg):
     if debug_mode:
-        print(f'[DEBUG] {meag}')
+        print(f'[DEBUG] {mesg}')
 def info(stat, mesg):
     print(f'[{stat}] {mesg}')
 
@@ -122,21 +122,22 @@ def createYamlFile(yamlTEMPLATE:str, outFILEname:str, **xargs):
     all_content = fIN.read().format(**xargs)
 
     print(f'[OutputFile] Writing output file "{outFILEname}"')
-    f_out = open(fname, 'w')
+    f_out = open(outFILEname, 'w')
     f_out.write(all_content)
     f_out.close()
 
 def listAllApps():
     cmd_output = subprocess.run(['powershell', '-Command', 'Get-StartApps'], capture_output=True, text=True)
     info('AllApplications', 'list of all applications information from windows')
-    for a in cmd_output.split('\n'):
+    for a in cmd_output.stdout.split('\n'):
         print(a)
 
 def searchAppsInPowerShell(appNAME:str) -> tuple:
-    cmd_output = subprocess.run(['powershell', '-Command', '$myobj=Get-StartApps -Name {appNAME} | Write-Output $myobj.Name'] , capture_output=True, text=True)
-    candidate_names = cmd_output.strip().split('\n')
-    cmd_output = subprocess.run(['powershell', '-Command', '$myobj=Get-StartApps -Name {appNAME} | Write-Output $myobj.AppID'], capture_output=True, text=True)
-    candidate_appID = cmd_output.strip().split('\n')
+    cmd_output = subprocess.run(['powershell', '-Command', f'$myobj=Get-StartApps -Name {appNAME} ; Write-Output $myobj.Name'] , capture_output=True, text=True)
+    BUG(f'[GotRes] searchAppsInPowerShell() cmd_output = {cmd_output}')
+    candidate_names = cmd_output.stdout.strip().split('\n')
+    cmd_output = subprocess.run(['powershell', '-Command', f'$myobj=Get-StartApps -Name {appNAME} ; Write-Output $myobj.AppID'], capture_output=True, text=True)
+    candidate_appID = cmd_output.stdout.strip().split('\n')
     return (candidate_names, candidate_appID)
 
 
@@ -172,10 +173,26 @@ if __name__ == "__main__":
 
     #listAllApps()
     candidate_names, candidate_appIDs = searchAppsInPowerShell(searchAPPname)
+    BUG(f'Got candidates')
+    for candidate in candidate_names:
+        BUG(candidate)
+    window_name = showOptions(candidate_names)
+
+
+    idx = candidate_names.index(window_name)
+    app_activate_str = candidate_appIDs[idx]
+
+    # once space found in the strig, ignore content behind space. window_name is only modified on record stage
+    find_space_idx = window_name.find(' ')
+    if find_space_idx != -1:
+        window_name = window_name[:find_space_idx]
+    ''' # disabled block
     app_activate_str = showOptions(candidate_names)
     idx = candidate_names.index(app_activate_str)
     window_name = candidate_appIDs[idx]
-
+    '''
+    info('GotResult', f'window name is {window_name}')
+    info('GotResult', f'application string is {app_activate_str}')
     createYamlFile(
             inputYAMLtemplate,
             outputFILEname,
