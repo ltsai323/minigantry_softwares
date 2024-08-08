@@ -9,9 +9,15 @@ debug_mode = True
 def BUG(mesg):
     if debug_mode:
         print(f'[BUG] {mesg}')
+def info(mesg):
+    print(f'i@ {mesg}')
 
-def PrimaryLog(mesg): print(f'[Status] {mesg}')
-def SecondaryLog(mesg): print(f'[Action] {mesg}')
+def PrimaryLog(mesg):
+    info(f'[Status] {mesg}')
+    print(f'[Status] {mesg}')
+def SecondaryLog(mesg):
+    info(f'[Action] {mesg}')
+    print(f'[Action] {mesg}')
 
 DELAY_delay_waiting_for_start = 3
 def launch_application(appACTIVATEstr:str, delayWAITINGforSTART=DELAY_delay_waiting_for_start):
@@ -45,13 +51,13 @@ class WindowMgr:
 
     def _window_enum_callback(self, hwnd, wildcard):
         if re.match(wildcard, str(win32gui.GetWindowText(hwnd))) is not None:
-            BUG(f'[GotWindowName] {str(win32gui.GetWindowText(hwnd))} with _handle={hwnd}')
+            info(f'[GotWindowName] {str(win32gui.GetWindowText(hwnd))} with _handle={hwnd}')
             self._handle = hwnd
 
     def find_window_wildcard(self, wildcard):
         self._handle = None
         win32gui.EnumWindows(self._window_enum_callback, wildcard)
-        BUG(f'[Got Handle] (type:{type(self._handle)}) - {self._handle}')
+        info(f'[Got Handle] (type:{type(self._handle)}) - {self._handle}')
         if self._handle == None:
             PrimaryLog('ApplicationNotOpened')
             SecondaryLog(f'WindowMgr found no window from wildcard "{wildcard}"')
