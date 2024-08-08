@@ -1,8 +1,12 @@
 init_delay: 4
 # Find app_activate_str by executing power shell command "get-StartApps"
-app_activate_str: 'Microsoft.WindowsStore_8wekyb3d8bbwe!App' # window store
-window_name: 'Microsoft Store' # name from Task Manager
+app_activate_str: '{7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\DinoCapture 2.0\DinoCapture.exe'
+window_name: 'DinoCapture 2.0'
 work_delay: 2
 hotkey:
-  - 'ctrl'
-  - 'f4'
+  - 'f11'
+#app_activate_str: 'Microsoft.WindowsStore_8wekyb3d8bbwe!App' # window store
+#window_name: 'Microsoft Store' # name from Task Manager
+#hotkey:
+#  - 'ctrl'
+#  - 'f4'
