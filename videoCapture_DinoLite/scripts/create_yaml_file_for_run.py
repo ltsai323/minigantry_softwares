@@ -183,9 +183,11 @@ if __name__ == "__main__":
     app_activate_str = candidate_appIDs[idx]
 
     # once space found in the strig, ignore content behind space. window_name is only modified on record stage
+    ''' disabled block that removing version information
     find_space_idx = window_name.find(' ')
     if find_space_idx != -1:
         window_name = window_name[:find_space_idx]
+    '''
     ''' # disabled block
     app_activate_str = showOptions(candidate_names)
     idx = candidate_names.index(app_activate_str)
