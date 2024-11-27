@@ -15,7 +15,6 @@ def PrintHelp():
     ===    as input file.                                          ===
     ==================================================================
     ''')
-    os.system('pause')
 def GetArg_InputFile(argv):
     if len(argv) != 2:
         PrintHelp()
@@ -33,10 +32,10 @@ def TranslatePointsFromLine(line):
   words=line.split()
   if len(words) < 2: return None
   return MyPoint(words[-2],words[-1])
+def Transform_Rotate180(point):
+    return MyPoint( -1.*point.x, -1.*point.y)
 def TransformIntoMiniGantry(point):
   return MyPoint( -1.*point.y, point.x)
-def InvTransformIntoMiniGantry(point):
-  return MyPoint( point.y, -1.*point.x )
 
 def SortingPoints(point_pool):
   MAXLEN_ACCEPTABLE=70
@@ -79,10 +78,10 @@ def ShortedLength(currentPoint, PointPool):
   resultlist.append(pointFound)
   return resultlist
 
-def DrawOutput(points_, outputname):
+def DrawOutput(points, outputname):
   from matplotlib import pyplot
   import numpy as np
-  points = [ InvTransformIntoMiniGantry(p) for p in points_ ]
+  pyplot.clf()
 
   xvals = np.array( [ point.x for point in points ] )
   yvals = np.array( [ point.y for point in points ] )
@@ -95,31 +94,40 @@ def DrawOutput(points_, outputname):
 
 if __name__ == "__main__":
   import sys
-  if len(sys.argv) != 2: raise IOError('input a text file!')
+  if len(sys.argv) < 2+1: raise IOError('input a text file!')
   print ( 'input file : %s' % sys.argv[1] )
+  ROTATION_NEEDED = True if len(sys.argv)>2 and sys.argv[2] == '1' else False
+  print ( 'rotated ? %s' % 'True' if ROTATION_NEEDED else 'False' )
+
 
   lines = ( line.strip() for line in open(sys.argv[1], 'r').readlines() if 'CIRCLE' in line )
-  points = ( TranslatePointsFromLine(line) for line in lines if (TranslatePointsFromLine(line) != None ))
-  convertedPoints = [ TransformIntoMiniGantry(point) for point in points ]
-  for idx, cPoint in enumerate(convertedPoints):
+  points = [ TranslatePointsFromLine(line) for line in lines if (TranslatePointsFromLine(line) != None )]
+
+  for idx, cPoint in enumerate(points):
     if abs(cPoint.x) < 1e-1 and abs(cPoint.y) < 1e-1:
       print('reference point found. remove it from point list')
-      convertedPoints.pop(idx)
+      points.pop(idx)
+  sortedPoints = SortingPoints(points)
 
-  print(mesg)
-  sortedPoints = SortingPoints(convertedPoints)
+  # rotated
+  tmp_points = sortedPoints
+  if ROTATION_NEEDED:
+    rotatedPoints   = [ Transform_Rotate180(point)     for point in tmp_points]
+    tmp_points = rotatedPoints
+  convertedPoints   = [ TransformIntoMiniGantry(point) for point in tmp_points]
 
+  outputPoints = convertedPoints
   with open('output_sortedPoints.txt', 'w') as ofile:
-    for idx,cPoint in enumerate(sortedPoints):
+    for idx,cPoint in enumerate(outputPoints):
       # print to screen
       #print('No.%2d: %s'%(idx,cPoint))
       #if idx%5==5-1: print('---- 5 sep ----')
-
+      
       # print to file
       ofile.write('No.%2d: %s\n'%(idx+1,cPoint))
       if idx%5==5-1: ofile.write('---- 5 sep ----\n')
-  DrawOutput(sortedPoints, 'points_convertedToMiniGantry.png')
+  DrawOutput(convertedPoints, 'points_MiniGantryView.png')
+  DrawOutput(tmp_points, 'points_LabView.png')
 
   print('output file is "output_sortedPoints.txt')
-  import os
-  os.system('pause')
+
