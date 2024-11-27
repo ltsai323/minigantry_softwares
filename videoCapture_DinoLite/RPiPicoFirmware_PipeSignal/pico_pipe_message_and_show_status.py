@@ -25,7 +25,8 @@ And you need to judge how to handle the IO behaviour.
 '''
 
 # Setup GPIO pins
-gpio_read  = machine.Pin(10, machine.Pin.IN)
+#gpio_read  = machine.Pin(10, machine.Pin.IN) ## GPIO 10 seems broken
+gpio_read  = machine.Pin( 9, machine.Pin.IN)
 gpio_write = machine.Pin(16, machine.Pin.OUT)
 led = machine.Pin(25, machine.Pin.OUT)  # On-board LED
 REFRESH_PERIOD = 0.1
@@ -39,7 +40,9 @@ def BUG(mesg):
         print(mesg)
 
 def read_gpio_read():
-    return gpio_read.value()
+    read_val = gpio_read.value()
+    led.value(read_val)
+    return read_val
 
 def set_gpio_write(value):
     gpio_write.value(value)
