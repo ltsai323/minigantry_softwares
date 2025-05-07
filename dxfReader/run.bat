@@ -8,5 +8,5 @@ if "%inputfile%" == "" (
 )
 
 ECHO input file is : "%inputfile%"
-python3.exe dxfReader.py "%inputfile%" && python3.exe sortedPoint.py output_dxfReader.txt
+python3.exe dxfReader.py "%inputfile%" && python3.exe sortedPoint.py step1_dxfReader.txt 0
 pause
