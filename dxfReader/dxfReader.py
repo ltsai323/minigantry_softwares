@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print('Invalid or corrupted DXF file.')
         sys.exit(2)
 
-    f = open("output_dxfReader.txt", "w")
+    f = open("step1_dxfReader.txt", "w")
     f.write("Type, Dispense, cw/ccw, speed, start_x, start_y, end_x, end_y, center_x, center_y\n")
 
     # iterate over all entities in modelspace
@@ -73,5 +73,5 @@ if __name__ == "__main__":
     last_end=(0,0,0)
     for e in msp:
         write_entity(e, f, last_end)
+    print(f'[TXTgenerated] output file is "{f.name}"')
     f.close()
-    print('output file is "output_dxfReader.txt')

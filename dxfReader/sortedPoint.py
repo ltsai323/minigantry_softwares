@@ -25,13 +25,24 @@ class MyPoint(object):
     self.x=float(x)
     self.y=float(y)
   def __repr__(self):
-    return '(%7.2f,%7.2f)'%(self.x,self.y)
+    return 'MyPoint(%7.2f,%7.2f)'%(self.x,self.y)
   def Length(self,point):
     return ( (self.x-point.x)**2+(self.y-point.y)**2 )**0.5
+class MyLine(object):
+  def __init__(self, startX, startY, endX, endY):
+    self.start = MyPoint(startX,startY)
+    self.end   = MyPoint(endX  ,endY  )
+  def __repr__(self):
+      return f'MyLine({self.start.x:7.2f},{self.start.y:7.2f},{self.end.x:7.2f},{self.end.y:7.2f})'
 def TranslatePointsFromLine(line):
   words=line.split()
   if len(words) < 2: return None
   return MyPoint(words[-2],words[-1])
+def TranslateLineFromLine(line):
+  words=line.split()
+  print(f'[checkline] {line}')
+  if len(words) < 2: return None
+  return MyLine(words[-6],words[-5],words[-4],words[-3])
 def Transform_Rotate180(point):
     return MyPoint( -1.*point.x, -1.*point.y)
 def TransformIntoMiniGantry(point):
@@ -90,6 +101,7 @@ def DrawOutput(points, outputname):
   pyplot.plot(xvals, yvals, '.r-')
   #pyplot.show()
   pyplot.savefig(outputname)
+  print(f'[SaveFig] output figure {outputname}')
 
 
 if __name__ == "__main__":
@@ -100,8 +112,11 @@ if __name__ == "__main__":
   print ( 'rotated ? %s' % 'True' if ROTATION_NEEDED else 'False' )
 
 
-  lines = ( line.strip() for line in open(sys.argv[1], 'r').readlines() if 'CIRCLE' in line )
-  points = [ TranslatePointsFromLine(line) for line in lines if (TranslatePointsFromLine(line) != None )]
+  raw_lineANDpoint = [ line.strip() for line in open(sys.argv[1], 'r').readlines() if 'CIRCLE' in line or 'LINE' in line ]
+
+  points = [ TranslatePointsFromLine(line) for line in raw_lineANDpoint if ('CIRCLE' in line and TranslatePointsFromLine(line) is not None )]
+  lines = [ TranslateLineFromLine(line) for line in raw_lineANDpoint if ('LINE' in line and TranslateLineFromLine(line) is not None)]
+
 
   for idx, cPoint in enumerate(points):
     if abs(cPoint.x) < 1e-1 and abs(cPoint.y) < 1e-1:
@@ -117,7 +132,7 @@ if __name__ == "__main__":
   convertedPoints   = [ TransformIntoMiniGantry(point) for point in tmp_points]
 
   outputPoints = convertedPoints
-  with open('output_sortedPoints.txt', 'w') as ofile:
+  with open('step2_sortedPoints.txt', 'w') as ofile:
     for idx,cPoint in enumerate(outputPoints):
       # print to screen
       #print('No.%2d: %s'%(idx,cPoint))
@@ -126,8 +141,16 @@ if __name__ == "__main__":
       # print to file
       ofile.write('No.%2d: %s\n'%(idx+1,cPoint))
       if idx%5==5-1: ofile.write('---- 5 sep ----\n')
-  DrawOutput(convertedPoints, 'points_MiniGantryView.png')
-  DrawOutput(tmp_points, 'points_LabView.png')
+    print(f'[TXTgenerated] output file "{ofile.name}"')
 
-  print('output file is "output_sortedPoints.txt')
+  with open('step2_sortedPoints.LabCoordinate.txt', 'w') as ofile:
+    for p in tmp_points:
+      ofile.write(f'{p}\n')
+    for l in lines:
+      ofile.write(f'{l}\n')
+    print(f'[TXTgenerated] output file "{ofile.name}"')
+
+
+  DrawOutput(tmp_points, 'step2_points_LabCoordinate.png')
+
 
