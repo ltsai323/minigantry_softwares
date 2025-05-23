@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import re
-from matplotlib.widgets import TextBox
 
 class Point:
     identifier = 'MyPoint'
@@ -130,72 +129,6 @@ def draw_plots(points:list,lines:list):
 
 
 
-
-
-def draw_plots(points:list, lines:list):
-    x = [p.x for p in points]
-    y = [p.y for p in points]
-
-    fig, ax = plt.subplots()
-    plt.subplots_adjust(bottom=0.2)  # Adjust layout to make space for the text box
-
-    sc = ax.scatter(x, y, color='blue')
-    ax.plot(x, y, '.r-')
-    for l in lines:
-        ax.plot(l.plotx, l.ploty, 'black')
-
-    annot = ax.annotate("", xy=(0, 0), xytext=(10, 10), textcoords="offset points",
-                        bbox=dict(boxstyle="round", fc="w"),
-                        arrowprops=dict(arrowstyle="->"))
-    annot.set_visible(False)
-
-    def update_annot_at_index(index):
-        if index < 0 or index >= len(points):
-            print(f"[Warning] Index {index + 1} is out of range.")
-            return
-        pos = (points[index].x, points[index].y)
-        annot.xy = pos
-        annot.set_text(f"Index: {index + 1}")
-        annot.set_visible(True)
-        annot.get_bbox_patch().set_alpha(0.7)
-        fig.canvas.draw_idle()
-
-    def update_annot(ind):
-        pos = sc.get_offsets()[ind["ind"][0]]
-        annot.xy = pos
-        text = f"Index: {ind['ind'][0] + 1}"
-        annot.set_text(text)
-        annot.set_visible(True)
-        annot.get_bbox_patch().set_alpha(0.7)
-
-    def on_click(event):
-        if event.inaxes == ax:
-            cont, ind = sc.contains(event)
-            if cont:
-                update_annot(ind)
-            else:
-                annot.set_visible(False)
-            fig.canvas.draw_idle()
-
-    fig.canvas.mpl_connect("button_press_event", on_click)
-
-    # Add TextBox for index input
-    axbox = plt.axes([0.15, 0.05, 0.3, 0.05])
-    text_box = TextBox(axbox, "Go to index:", initial="")
-
-    def submit(text):
-        try:
-            idx = int(text.strip()) - 1
-            update_annot_at_index(idx)
-        except ValueError:
-            print("[Error] Invalid input. Please enter a valid integer.")
-
-    text_box.on_submit(submit)
-
-    ax.set_title("Click or type an index to highlight a point")
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    plt.show()
 
 if __name__ == "__main__":
     import sys
