@@ -132,15 +132,18 @@ def draw_plots(points:list,lines:list):
 
 
 
-def draw_plots(points:list, lines:list):
+from matplotlib.widgets import TextBox, Button
+
+def draw_plots(points: list, lines: list):
     x = [p.x for p in points]
     y = [p.y for p in points]
 
     fig, ax = plt.subplots()
-    plt.subplots_adjust(bottom=0.2)  # Adjust layout to make space for the text box
+    plt.subplots_adjust(bottom=0.3)  # Extra space for widgets
 
     sc = ax.scatter(x, y, color='blue')
-    ax.plot(x, y, '.r-')
+    line_plot, = ax.plot(x, y, '.r-')  # store the Line2D object
+
     for l in lines:
         ax.plot(l.plotx, l.ploty, 'black')
 
@@ -163,8 +166,7 @@ def draw_plots(points:list, lines:list):
     def update_annot(ind):
         pos = sc.get_offsets()[ind["ind"][0]]
         annot.xy = pos
-        text = f"Index: {ind['ind'][0] + 1}"
-        annot.set_text(text)
+        annot.set_text(f"Index: {ind['ind'][0] + 1}")
         annot.set_visible(True)
         annot.get_bbox_patch().set_alpha(0.7)
 
@@ -179,8 +181,8 @@ def draw_plots(points:list, lines:list):
 
     fig.canvas.mpl_connect("button_press_event", on_click)
 
-    # Add TextBox for index input
-    axbox = plt.axes([0.15, 0.05, 0.3, 0.05])
+    # TextBox for index input
+    axbox = plt.axes([0.15, 0.15, 0.3, 0.05])
     text_box = TextBox(axbox, "Go to index:", initial="")
 
     def submit(text):
@@ -192,7 +194,18 @@ def draw_plots(points:list, lines:list):
 
     text_box.on_submit(submit)
 
-    ax.set_title("Click or type an index to highlight a point")
+    # Button to toggle red line visibility
+    ax_button = plt.axes([0.5, 0.15, 0.15, 0.05])
+    button = Button(ax_button, 'Toggle Line')
+
+    def toggle(event):
+        vis = line_plot.get_visible()
+        line_plot.set_visible(not vis)
+        fig.canvas.draw_idle()
+
+    button.on_clicked(toggle)
+
+    ax.set_title("Click or enter index to highlight point; Toggle line with button")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     plt.show()
