@@ -49,7 +49,7 @@ def TransformIntoMiniGantry(point):
   return MyPoint( -1.*point.y, point.x)
 
 def SortingPoints(point_pool):
-  MAXLEN_ACCEPTABLE=70
+  MAXLEN_ACCEPTABLE=500
   BREAK_COUNTER=len(point_pool)*2
 
   import random
