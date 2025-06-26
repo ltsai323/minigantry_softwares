@@ -57,27 +57,52 @@ def get_line(lineCONTENT) -> Line:
         print(f'[NoMatched] line "{input_string}" does not matched anything')
         return None
 
+def is_minigantry_frame(iFILE) -> bool:
+    with open(iFILE, 'r') as fIN:
+        scanNlines = 10
+        while scanNlines:
+            line = fIN.readline()
+            if not line: break
+            scanNlines -= 1
+            if '5 sep' in line: return True
+    return False
+
+
+def TransformFromMiniGantryToLabFrame(point:Point):
+  return Point(point.y_point, -1.*point.x_point)
+def TransformLineFromMiniGantryToLabFrame(line:Line):
+  pStart = TransformFromMiniGantryToLabFrame(line.start)
+  pEnd   = TransformFromMiniGantryToLabFrame(line.end  )
+  return Line(pStart.x_point,pStart.y_point,pEnd.x_point,pEnd.y_point)
 
 def recorded_points(iFILE):
     points = []
+
+    should_convert = is_minigantry_frame(iFILE)
     with open(iFILE, 'r') as fIN:
         line = 1
         while line:
             line = fIN.readline()
             p = get_point(line)
             if '(' not in line or ')' not in line: continue
-            if p: points.append(p)
+            if p:
+                if should_convert: p = TransformFromMiniGantryToLabFrame(p)
+                points.append(p)
     return points
 
 def recorded_lines(iFILE):
     points = []
+
+    should_convert = is_minigantry_frame(iFILE)
     with open(iFILE, 'r') as fIN:
         line = 1
         while line:
             line = fIN.readline()
             p = get_line(line)
             if '(' not in line or ')' not in line: continue
-            if p: points.append(p)
+            if p:
+                if should_convert: p = TransformLineFromMiniGantryToLabFrame(p)
+                points.append(p)
     return points
 
 

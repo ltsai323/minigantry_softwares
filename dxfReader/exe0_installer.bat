@@ -40,8 +40,25 @@ for %%M in (%MODULES%) do (
 
 REM Check if folder already exists
 if exist "%FOLDER_NAME%" (
-    echo The folder "%FOLDER_NAME%" already exists. Please delete it manually before running this script.
-    pause && exit /b
+  for /f "tokens=1-4 delims=/- " %%a in ("%date%") do (
+    set "DATE=%%d%%b%%c"
+  )
+  for /f "tokens=1-2 delims=:." %%a in ("%time%") do (
+    set "TIME=%%a%%b"
+  )
+  set "TIMESTAMP=%DATE%_%TIME%"
+
+  echo The folder "%FOLDER_NAME%" already exists.
+    set /p USER_CONFIRM=Do you want to rename it to "%FOLDER_NAME%_%TIMESTAMP%" and continue? (Y/N): 
+    if /i "%USER_CONFIRM%"=="Y" (
+        set "NEW_FOLDER=%FOLDER_NAME%_%TIMESTAMP%"
+        echo Renaming folder to "%NEW_FOLDER%"...
+        ren "%FOLDER_NAME%" "%NEW_FOLDER%"
+    ) else (
+        echo Operation cancelled by user.
+        pause
+        exit /b
+    )
 )
 
 REM Clone the repository
@@ -53,5 +70,5 @@ if %errorlevel% neq 0 (
 )
 
 echo Repository cloned successfully.
+pause
 endlocal
-pause && exit /b

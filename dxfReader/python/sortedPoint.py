@@ -16,9 +16,9 @@ def PrintHelp():
     ==================================================================
     ''')
 def GetArg_InputFile(argv):
-    if len(argv) != 2:
-        PrintHelp()
-    return argv[1]
+  if len(argv) != 2:
+    PrintHelp()
+  return argv[1]
 
 class MyPoint(object):
   def __init__(self, x,y):
@@ -33,7 +33,7 @@ class MyLine(object):
     self.start = MyPoint(startX,startY)
     self.end   = MyPoint(endX  ,endY  )
   def __repr__(self):
-      return f'MyLine({self.start.x:7.2f},{self.start.y:7.2f},{self.end.x:7.2f},{self.end.y:7.2f})'
+    return f'MyLine({self.start.x:7.2f},{self.start.y:7.2f},{self.end.x:7.2f},{self.end.y:7.2f})'
 def TranslatePointsFromLine(line):
   words=line.split()
   if len(words) < 2: return None
@@ -44,9 +44,17 @@ def TranslateLineFromLine(line):
   if len(words) < 2: return None
   return MyLine(words[-6],words[-5],words[-4],words[-3])
 def Transform_Rotate180(point):
-    return MyPoint( -1.*point.x, -1.*point.y)
+  return MyPoint( -1.*point.x, -1.*point.y)
+def Transform_RotateLine180(line):
+  pStart = Transform_Rotate180(line.start)
+  pEnd   = Transform_Rotate180(line.end)
+  return MyLine(pStart.x,pStart.y, pEnd.x,pEnd.y)
 def TransformIntoMiniGantry(point):
   return MyPoint( -1.*point.y, point.x)
+def TransformLineIntoMiniGantry(line):
+  pStart = TransformIntoMiniGantry(line.start)
+  pEnd   = TransformIntoMiniGantry(line.end)
+  return MyLine(pStart.x,pStart.y, pEnd.x,pEnd.y)
 
 def SortingPoints(point_pool):
   MAXLEN_ACCEPTABLE=500
@@ -126,12 +134,17 @@ if __name__ == "__main__":
 
   # rotated
   tmp_points = sortedPoints
+  tmp_lines  = lines
   if ROTATION_NEEDED:
     rotatedPoints   = [ Transform_Rotate180(point)     for point in tmp_points]
     tmp_points = rotatedPoints
+    rotatedLines    = [ Transform_RotateLine180(l)     for l     in tmp_lines ]
+    tmp_lines  = rotatedLines
   convertedPoints   = [ TransformIntoMiniGantry(point) for point in tmp_points]
+  convertedLines    = [ TransformLineIntoMiniGantry(l) for l     in tmp_lines ]
 
   outputPoints = convertedPoints
+  outputLines  = convertedLines
   with open('step2_sortedPoints.txt', 'w') as ofile:
     for idx,cPoint in enumerate(outputPoints):
       # print to screen
@@ -141,6 +154,9 @@ if __name__ == "__main__":
       # print to file
       ofile.write('No.%2d: %s\n'%(idx+1,cPoint))
       if idx%5==5-1: ofile.write('---- 5 sep ----\n')
+    for cLine in outputLines:
+      ofile.write('outerFrame: %s\n'%(cLine))
+
     print(f'[TXTgenerated] output file "{ofile.name}"')
 
   with open('step2_sortedPoints.LabCoordinate.txt', 'w') as ofile:

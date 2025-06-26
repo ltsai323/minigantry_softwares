@@ -17,14 +17,14 @@ check_shell_var_defined = \
 
 step1_convertdxf: ## convert a dxf file to point [dxfFILE=V3-LD-SemiLeft3_solidworks.dxf]
 	$(call check_defined, dxfFILE)
-	python3 dxfReader.py $(dxfFILE)
+	python3 python/dxfReader.py $(dxfFILE)
 step2_sortpoint: ## convert step1 text file to sorted points
-	python3 sortedPoint.py step1_dxfReader.txt  0
+	python3 python/sortedPoint.py step1_dxfReader.txt  0
 step2_sortpoint_180rotate: ## convert step1 text file to sorted points
-	python3 sortedPoint.py step1_dxfReader.txt  1
+	python3 python/sortedPoint.py step1_dxfReader.txt  1
 step3_checkpoints: ## checking [iFILE=step2_sortedPoints.LabCoordinate.txt]
 	$(call check_defined, iFILE)
-	python3 checkpoints.py $(iFILE)
+	python3 python/checkpoints.py $(iFILE)
 
 
 clean: ## clean output files
