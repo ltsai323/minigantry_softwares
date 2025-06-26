@@ -38,20 +38,23 @@ for %%M in (%MODULES%) do (
     )
 )
 
+For /f "tokens=1-4 delims=/:. " %%a in ("%DATE%") do (
+    SET _year=%%a
+    SET _mon=%%b
+    SET _day=%%c
+    SET _weekday=%%d
+	SET mytime=%%b-%%c-%%a
+)
+
 REM Check if folder already exists
 if exist "%FOLDER_NAME%" (
-  for /f "tokens=1-4 delims=/- " %%a in ("%date%") do (
-    set "DATE=%%d%%b%%c"
-  )
-  for /f "tokens=1-2 delims=:." %%a in ("%time%") do (
-    set "TIME=%%a%%b"
-  )
-  set "TIMESTAMP=%DATE%_%TIME%"
 
   echo The folder "%FOLDER_NAME%" already exists.
-    set /p USER_CONFIRM=Do you want to rename it to "%FOLDER_NAME%_%TIMESTAMP%" and continue? (Y/N): 
+  echo Do you want to rename it to %FOLDER_NAME%_%mytime% and continue? (Y/N);
+  set /p USER_CONFIRM=
+	
     if /i "%USER_CONFIRM%"=="Y" (
-        set "NEW_FOLDER=%FOLDER_NAME%_%TIMESTAMP%"
+        set "NEW_FOLDER=%FOLDER_NAME%_%mytime%"
         echo Renaming folder to "%NEW_FOLDER%"...
         ren "%FOLDER_NAME%" "%NEW_FOLDER%"
     ) else (

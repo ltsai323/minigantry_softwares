@@ -13,7 +13,7 @@ if "%filename%" == "" (
 )
 
 ECHO input file is : "%filename%"
-python3.exe checkpoints.py "%filename%"
+python3.exe .\python\checkpoints.py "%filename%"
 pause
 
 

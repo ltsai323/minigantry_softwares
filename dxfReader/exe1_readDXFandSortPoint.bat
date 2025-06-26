@@ -1,11 +1,7 @@
 @ECHO OFF
 
 SET "filename=%~1"
-if "%filename%" == "" (
-   ECHO "You need to drag a DXF file for execute further command"
-   pause
-   exit
-)
+
 :: Call PowerShell to show OpenFileDialog if filename not dragged
 if "%filename%" == "" (
   set "script_dir=%~dp0"
